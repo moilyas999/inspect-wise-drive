@@ -37,7 +37,6 @@ const CreateInspectionJobModal = ({ onJobCreated, children, inspectors }: Create
   const [fuelType, setFuelType] = useState('');
   const [transmission, setTransmission] = useState('');
   const [purchaseDate, setPurchaseDate] = useState<Date>(new Date());
-  const [purchasePrice, setPurchasePrice] = useState('');
   const [priority, setPriority] = useState('medium');
   const [notes, setNotes] = useState('');
   const [sellerAddress, setSellerAddress] = useState('');
@@ -55,7 +54,6 @@ const CreateInspectionJobModal = ({ onJobCreated, children, inspectors }: Create
     setFuelType('');
     setTransmission('');
     setPurchaseDate(new Date());
-    setPurchasePrice('');
     setPriority('medium');
     setNotes('');
     setSellerAddress('');
@@ -91,7 +89,7 @@ const CreateInspectionJobModal = ({ onJobCreated, children, inspectors }: Create
           fuel_type: fuelType || null,
           transmission: transmission || null,
           purchase_date: purchaseDate.toISOString().split('T')[0],
-          purchase_price: purchasePrice ? parseFloat(purchasePrice) : null,
+          purchase_price: null,
           priority: priority,
           notes: notes.trim() || null,
           seller_address: sellerAddress.trim() || null,
@@ -327,35 +325,19 @@ const CreateInspectionJobModal = ({ onJobCreated, children, inspectors }: Create
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="purchasePrice">Purchase Price (£)</Label>
-              <Input
-                id="purchasePrice"
-                type="number"
-                placeholder="15000"
-                value={purchasePrice}
-                onChange={(e) => setPurchasePrice(e.target.value)}
-                disabled={loading}
-                min="0"
-                step="0.01"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="priority">Priority</Label>
-              <Select value={priority} onValueChange={setPriority} disabled={loading}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="priority">Priority</Label>
+            <Select value={priority} onValueChange={setPriority} disabled={loading}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select priority" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="urgent">Urgent</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
