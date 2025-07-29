@@ -4,23 +4,27 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, CheckCircle2, Car, UserCog, HardHat } from 'lucide-react';
+import { Loader2, CheckCircle2, Building2 } from 'lucide-react';
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [role, setRole] = useState('staff');
+  const [businessName, setBusinessName] = useState('');
   const [loading, setLoading] = useState(false);
   const { user, userRole, signIn, signUp } = useAuth();
   const { toast } = useToast();
 
-  if (user) {
-    return <Navigate to="/" replace />;
+  if (user && userRole) {
+    // Redirect based on role
+    if (userRole === 'admin') {
+      return <Navigate to="/admin" replace />;
+    } else if (userRole === 'staff') {
+      return <Navigate to="/dashboard" replace />;
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,9 +32,15 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      const result = isSignUp 
-        ? await signUp(email, password, name, role)
-        : await signIn(email, password);
+      let result;
+      
+      if (isSignUp) {
+        // Admin signup with business creation
+        result = await signUp(email, password, name, 'admin', businessName);
+      } else {
+        // Regular login for both admin and staff
+        result = await signIn(email, password);
+      }
 
       if (result.error) {
         toast({
@@ -40,7 +50,7 @@ const Auth = () => {
         });
       } else if (isSignUp) {
         toast({
-          title: "Account Created!",
+          title: "Business Account Created!",
           description: "Please check your email to verify your account.",
           variant: "default",
         });
@@ -61,23 +71,23 @@ const Auth = () => {
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-4">
           <div className="mx-auto w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center shadow-primary">
-            <Car className="w-8 h-8 text-primary-foreground" />
+            <Building2 className="w-8 h-8 text-primary-foreground" />
           </div>
           <div>
             <h1 className="text-3xl font-bold text-foreground">VehicleWise</h1>
-            <p className="text-muted-foreground">Professional Vehicle Inspection</p>
+            <p className="text-muted-foreground">Professional Vehicle Inspection Platform</p>
           </div>
         </div>
 
         <Card className="shadow-card border-0 backdrop-blur-sm bg-card/80">
           <CardHeader className="space-y-2">
             <CardTitle className="text-2xl font-semibold text-center">
-              {isSignUp ? 'Create Account' : 'Welcome Back'}
+              {isSignUp ? 'Create Business Account' : 'Welcome Back'}
             </CardTitle>
             <CardDescription className="text-center">
               {isSignUp 
-                ? 'Join our team of professional inspectors' 
-                : 'Sign in to access your inspection dashboard'
+                ? 'Register your business and start managing vehicle inspections' 
+                : 'Sign in to access your account'
               }
             </CardDescription>
           </CardHeader>
@@ -85,7 +95,22 @@ const Auth = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               {isSignUp && (
                 <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
+                  <Label htmlFor="businessName">Business Name</Label>
+                  <Input
+                    id="businessName"
+                    type="text"
+                    placeholder="Enter your business name"
+                    value={businessName}
+                    onChange={(e) => setBusinessName(e.target.value)}
+                    required
+                    className="h-12 text-base"
+                  />
+                </div>
+              )}
+
+              {isSignUp && (
+                <div className="space-y-2">
+                  <Label htmlFor="name">Your Full Name</Label>
                   <Input
                     id="name"
                     type="text"
@@ -97,32 +122,6 @@ const Auth = () => {
                   />
                 </div>
               )}
-
-              {isSignUp && (
-                <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
-                  <Select value={role} onValueChange={setRole}>
-                    <SelectTrigger className="h-12">
-                      <SelectValue placeholder="Select your role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="staff">
-                        <div className="flex items-center gap-2">
-                          <HardHat className="w-4 h-4" />
-                          <span>Staff Inspector</span>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="admin">
-                        <div className="flex items-center gap-2">
-                          <UserCog className="w-4 h-4" />
-                          <span>Admin Manager</span>
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-              
               
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -159,12 +158,12 @@ const Auth = () => {
                 {loading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    {isSignUp ? 'Creating Account...' : 'Signing In...'}
+                    {isSignUp ? 'Creating Business...' : 'Signing In...'}
                   </>
                 ) : (
                   <>
                     <CheckCircle2 className="w-5 h-5" />
-                    {isSignUp ? 'Create Account' : 'Sign In'}
+                    {isSignUp ? 'Create Business Account' : 'Sign In'}
                   </>
                 )}
               </Button>
@@ -178,10 +177,19 @@ const Auth = () => {
               >
                 {isSignUp
                   ? 'Already have an account? Sign in'
-                  : "Don't have an account? Create one"
+                  : "Don't have a business account? Register now"
                 }
               </button>
             </div>
+
+            {!isSignUp && (
+              <div className="mt-4 p-4 bg-accent/20 rounded-lg">
+                <p className="text-sm text-muted-foreground text-center">
+                  <strong>Staff members:</strong> Your admin will provide login credentials. 
+                  Contact your business administrator if you need access.
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

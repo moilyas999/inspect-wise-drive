@@ -1,0 +1,430 @@
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { 
+  ArrowLeft,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  Car,
+  Clock,
+  MapPin,
+  User,
+  Flag,
+  FileText,
+  Camera
+} from 'lucide-react';
+import { format } from 'date-fns';
+
+interface InspectionJob {
+  id: string;
+  reg: string;
+  make: string;
+  model: string;
+  vin: string;
+  seller_address: string;
+  deadline: string;
+  status: string;
+  review_status: string;
+  assigned_inspector?: {
+    name: string;
+    email: string;
+  };
+}
+
+interface InspectionStep {
+  id: string;
+  section: string;
+  is_complete: boolean;
+  notes: string;
+  rating: number;
+}
+
+interface InspectionFault {
+  id: string;
+  type: 'mechanical' | 'bodywork';
+  description: string;
+  location: string;
+  media_url: string;
+  flagged_for_repair: boolean;
+}
+
+const InspectionReview = () => {
+  const { jobId } = useParams();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  const [job, setJob] = useState<InspectionJob | null>(null);
+  const [steps, setSteps] = useState<InspectionStep[]>([]);
+  const [faults, setFaults] = useState<InspectionFault[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [reviewNotes, setReviewNotes] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!jobId) return;
+    fetchInspectionData();
+  }, [jobId]);
+
+  const fetchInspectionData = async () => {
+    try {
+      setLoading(true);
+
+      // Fetch job details
+      const { data: jobData, error: jobError } = await supabase
+        .from('inspection_jobs')
+        .select(`
+          *,
+          assigned_inspector:inspectors!inspection_jobs_assigned_to_fkey(
+            name,
+            email
+          )
+        `)
+        .eq('id', jobId)
+        .single();
+
+      if (jobError) throw jobError;
+      setJob(jobData as InspectionJob);
+
+      // Fetch inspection steps
+      const { data: stepsData, error: stepsError } = await supabase
+        .from('inspection_steps')
+        .select('*')
+        .eq('job_id', jobId)
+        .order('created_at', { ascending: true });
+
+      if (stepsError) throw stepsError;
+      setSteps(stepsData as InspectionStep[]);
+
+      // Fetch faults
+      const { data: faultsData, error: faultsError } = await supabase
+        .from('inspection_faults')
+        .select('*')
+        .eq('job_id', jobId)
+        .order('created_at', { ascending: true });
+
+      if (faultsError) throw faultsError;
+      setFaults(faultsData as InspectionFault[]);
+
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load inspection details",
+        variant: "destructive",
+      });
+      navigate('/admin');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReviewSubmit = async (reviewStatus: 'approved' | 'rejected') => {
+    if (!job) return;
+
+    setSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from('inspection_jobs')
+        .update({
+          review_status: reviewStatus,
+          reviewed_at: new Date().toISOString(),
+          // reviewed_by would be set to current admin's inspector ID
+        })
+        .eq('id', jobId);
+
+      if (error) throw error;
+
+      toast({
+        title: `Inspection ${reviewStatus === 'approved' ? 'Approved' : 'Rejected'}`,
+        description: `The inspection has been ${reviewStatus}`,
+      });
+
+      navigate('/admin');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to ${reviewStatus} inspection`,
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const toggleFaultFlag = async (faultId: string, currentFlag: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('inspection_faults')
+        .update({ flagged_for_repair: !currentFlag })
+        .eq('id', faultId);
+
+      if (error) throw error;
+
+      setFaults(prev => prev.map(fault => 
+        fault.id === faultId 
+          ? { ...fault, flagged_for_repair: !currentFlag }
+          : fault
+      ));
+
+      toast({
+        title: currentFlag ? "Fault Unflagged" : "Fault Flagged",
+        description: currentFlag 
+          ? "Fault removed from prep team queue"
+          : "Fault flagged for preparation team",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update fault flag",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return <Badge className="gap-1 bg-success hover:bg-success/80"><CheckCircle2 className="w-3 h-3" />Approved</Badge>;
+      case 'rejected':
+        return <Badge variant="destructive" className="gap-1"><XCircle className="w-3 h-3" />Rejected</Badge>;
+      default:
+        return <Badge variant="outline" className="gap-1"><Clock className="w-3 h-3" />Pending Review</Badge>;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-muted-foreground">Loading inspection details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!job) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <AlertTriangle className="w-12 h-12 text-muted-foreground mx-auto" />
+          <h2 className="text-xl font-semibold">Inspection Not Found</h2>
+          <Button onClick={() => navigate('/admin')}>Return to Dashboard</Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
+      {/* Header */}
+      <div className="border-b bg-card/50 backdrop-blur-sm">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate('/admin')}
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div className="flex-1">
+              <h1 className="text-lg font-bold text-foreground">
+                Inspection Review: {job.make} {job.model}
+              </h1>
+              <p className="text-sm text-muted-foreground font-mono">{job.reg}</p>
+            </div>
+            {getStatusBadge(job.review_status)}
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-6 space-y-6">
+        {/* Vehicle Info */}
+        <Card className="shadow-card border-0 bg-card/80 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Car className="w-5 h-5" />
+              Vehicle Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm">
+                <MapPin className="w-4 h-4 text-muted-foreground" />
+                <span>{job.seller_address}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <User className="w-4 h-4 text-muted-foreground" />
+                <span>Inspector: {job.assigned_inspector?.name}</span>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm">
+                <Clock className="w-4 h-4 text-muted-foreground" />
+                <span>Deadline: {format(new Date(job.deadline), 'PPp')}</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <FileText className="w-4 h-4 text-muted-foreground" />
+                <span>VIN: {job.vin}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Inspection Steps */}
+        <Card className="shadow-card border-0 bg-card/80 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle>Inspection Checklist</CardTitle>
+            <CardDescription>
+              Completed sections: {steps.filter(s => s.is_complete).length} / {steps.length}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {steps.map((step) => (
+                <div
+                  key={step.id}
+                  className={`p-3 rounded-lg border ${
+                    step.is_complete ? 'bg-success/10 border-success/20' : 'bg-muted/50'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    {step.is_complete ? (
+                      <CheckCircle2 className="w-4 h-4 text-success" />
+                    ) : (
+                      <XCircle className="w-4 h-4 text-muted-foreground" />
+                    )}
+                    <span className="font-medium capitalize">
+                      {step.section.replace(/_/g, ' ')}
+                    </span>
+                  </div>
+                  {step.notes && (
+                    <p className="text-sm text-muted-foreground">{step.notes}</p>
+                  )}
+                  {step.rating && (
+                    <div className="text-sm text-muted-foreground">
+                      Rating: {step.rating}/5 stars
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Faults */}
+        {faults.length > 0 && (
+          <Card className="shadow-card border-0 bg-card/80 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5" />
+                Reported Faults ({faults.length})
+              </CardTitle>
+              <CardDescription>
+                Issues found during inspection
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {faults.map((fault) => (
+                  <div
+                    key={fault.id}
+                    className={`p-4 rounded-lg border ${
+                      fault.flagged_for_repair 
+                        ? 'bg-warning/10 border-warning/30' 
+                        : 'bg-muted/50'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant="outline">
+                            {fault.type === 'mechanical' ? 'Mechanical' : 'Bodywork'}
+                          </Badge>
+                          {fault.location && (
+                            <span className="text-sm text-muted-foreground">
+                              {fault.location}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm font-medium">{fault.description}</p>
+                        {fault.media_url && (
+                          <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
+                            <Camera className="w-3 h-3" />
+                            Photo evidence available
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        variant={fault.flagged_for_repair ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => toggleFaultFlag(fault.id, fault.flagged_for_repair)}
+                        className="gap-1"
+                      >
+                        <Flag className="w-3 h-3" />
+                        {fault.flagged_for_repair ? 'Flagged' : 'Flag for Prep'}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Review Actions */}
+        {job.review_status === 'pending' && (
+          <Card className="shadow-card border-0 bg-card/80 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle>Review Actions</CardTitle>
+              <CardDescription>
+                Approve or reject this inspection
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Review Notes (Optional)
+                </label>
+                <Textarea
+                  placeholder="Add any notes about this inspection..."
+                  value={reviewNotes}
+                  onChange={(e) => setReviewNotes(e.target.value)}
+                  className="min-h-20"
+                />
+              </div>
+              
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => handleReviewSubmit('rejected')}
+                  disabled={submitting}
+                  className="flex-1 gap-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                >
+                  <XCircle className="w-4 h-4" />
+                  Reject Inspection
+                </Button>
+                <Button
+                  onClick={() => handleReviewSubmit('approved')}
+                  disabled={submitting}
+                  className="flex-1 gap-2 bg-success hover:bg-success/80"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  Approve Inspection
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default InspectionReview;

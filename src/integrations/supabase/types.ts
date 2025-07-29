@@ -14,10 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
-      inspection_faults: {
+      businesses: {
         Row: {
           created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      inspection_faults: {
+        Row: {
+          business_id: string | null
+          created_at: string
           description: string
+          flagged_for_repair: boolean | null
           id: string
           job_id: string
           location: string | null
@@ -25,8 +48,10 @@ export type Database = {
           type: string
         }
         Insert: {
+          business_id?: string | null
           created_at?: string
           description: string
+          flagged_for_repair?: boolean | null
           id?: string
           job_id: string
           location?: string | null
@@ -34,8 +59,10 @@ export type Database = {
           type: string
         }
         Update: {
+          business_id?: string | null
           created_at?: string
           description?: string
+          flagged_for_repair?: boolean | null
           id?: string
           job_id?: string
           location?: string | null
@@ -43,6 +70,13 @@ export type Database = {
           type?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "inspection_faults_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "inspection_faults_job_id_fkey"
             columns: ["job_id"]
@@ -55,12 +89,16 @@ export type Database = {
       inspection_jobs: {
         Row: {
           assigned_to: string
+          business_id: string | null
           created_at: string
           deadline: string | null
           id: string
           make: string
           model: string
           reg: string
+          review_status: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           seller_address: string | null
           status: string
           updated_at: string
@@ -68,12 +106,16 @@ export type Database = {
         }
         Insert: {
           assigned_to: string
+          business_id?: string | null
           created_at?: string
           deadline?: string | null
           id?: string
           make: string
           model: string
           reg: string
+          review_status?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           seller_address?: string | null
           status?: string
           updated_at?: string
@@ -81,12 +123,16 @@ export type Database = {
         }
         Update: {
           assigned_to?: string
+          business_id?: string | null
           created_at?: string
           deadline?: string | null
           id?: string
           make?: string
           model?: string
           reg?: string
+          review_status?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           seller_address?: string | null
           status?: string
           updated_at?: string
@@ -100,10 +146,25 @@ export type Database = {
             referencedRelation: "inspectors"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "inspection_jobs_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inspection_jobs_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "inspectors"
+            referencedColumns: ["id"]
+          },
         ]
       }
       inspection_media: {
         Row: {
+          business_id: string | null
           id: string
           job_id: string
           lat: number | null
@@ -114,6 +175,7 @@ export type Database = {
           url: string
         }
         Insert: {
+          business_id?: string | null
           id?: string
           job_id: string
           lat?: number | null
@@ -124,6 +186,7 @@ export type Database = {
           url: string
         }
         Update: {
+          business_id?: string | null
           id?: string
           job_id?: string
           lat?: number | null
@@ -135,6 +198,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "inspection_media_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "inspection_media_job_id_fkey"
             columns: ["job_id"]
             isOneToOne: false
@@ -145,6 +215,7 @@ export type Database = {
       }
       inspection_steps: {
         Row: {
+          business_id: string | null
           created_at: string
           id: string
           is_complete: boolean
@@ -155,6 +226,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          business_id?: string | null
           created_at?: string
           id?: string
           is_complete?: boolean
@@ -165,6 +237,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          business_id?: string | null
           created_at?: string
           id?: string
           is_complete?: boolean
@@ -176,6 +249,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "inspection_steps_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "inspection_steps_job_id_fkey"
             columns: ["job_id"]
             isOneToOne: false
@@ -186,30 +266,47 @@ export type Database = {
       }
       inspectors: {
         Row: {
+          business_id: string | null
           created_at: string
+          created_by: string | null
           email: string
           id: string
           name: string
+          status: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          business_id?: string | null
           created_at?: string
+          created_by?: string | null
           email: string
           id?: string
           name: string
+          status?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          business_id?: string | null
           created_at?: string
+          created_by?: string | null
           email?: string
           id?: string
           name?: string
+          status?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "inspectors_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -243,6 +340,10 @@ export type Database = {
           jobs_created: number
           message: string
         }[]
+      }
+      get_user_business_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       has_role: {
         Args: {
