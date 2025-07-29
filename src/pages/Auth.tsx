@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, CheckCircle2, Building2 } from 'lucide-react';
+import { Loader2, CheckCircle2, Building2, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { MobileScreen } from '@/components/ui/mobile-container';
+import { MobileCard, MobileCardContent, MobileCardHeader } from '@/components/ui/mobile-card';
+import { MobileInput } from '@/components/ui/mobile-input';
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -16,6 +16,7 @@ const Auth = () => {
   const [name, setName] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { user, userRole, signIn, signUp } = useAuth();
   const { toast } = useToast();
 
@@ -80,140 +81,156 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 flex flex-col">
-      {/* Mobile-first safe area */}
-      <div className="flex-1 flex flex-col justify-center px-4 py-8 safe-area-inset">
-        <div className="w-full max-w-sm mx-auto space-y-8">
-          {/* App-style header */}
-          <div className="text-center space-y-6">
-            <div className="mx-auto w-20 h-20 bg-gradient-primary rounded-3xl flex items-center justify-center shadow-primary">
-              <Building2 className="w-10 h-10 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground mb-2">Status Motor Group</h1>
-              <p className="text-sm text-muted-foreground leading-relaxed">Collections Management App</p>
+    <MobileScreen withPadding={false} className="flex flex-col">
+      {/* Status bar background */}
+      <div className="h-11 bg-gradient-to-r from-primary via-primary/90 to-primary" />
+      
+      {/* Main content */}
+      <div className="flex-1 flex flex-col justify-center px-6 py-8 min-h-0">
+        {/* Hero section */}
+        <div className="text-center space-y-8 mb-8">
+          <div className="flex justify-center">
+            <div className="w-24 h-24 bg-gradient-to-br from-primary to-primary/80 rounded-3xl flex items-center justify-center shadow-2xl shadow-primary/25">
+              <Building2 className="w-12 h-12 text-primary-foreground" />
             </div>
           </div>
+          
+          <div className="space-y-3">
+            <h1 className="text-3xl font-bold text-foreground tracking-tight">
+              Status Motor Group
+            </h1>
+            <p className="text-base text-muted-foreground leading-relaxed max-w-xs mx-auto">
+              Collections Management App
+            </p>
+          </div>
+        </div>
 
-          {/* Mobile-optimized card */}
-          <Card className="shadow-card border-0 backdrop-blur-sm bg-card/95 rounded-2xl">
-            <CardHeader className="space-y-3 pb-6">
-              <CardTitle className="text-xl font-semibold text-center leading-tight">
-                {isSignUp ? 'Create Business Account' : 'Welcome Back'}
-              </CardTitle>
-              <CardDescription className="text-center text-sm leading-relaxed px-2">
+        {/* Auth form */}
+        <MobileCard variant="elevated" className="max-w-sm mx-auto w-full">
+          <MobileCardHeader>
+            <div className="text-center space-y-2">
+              <h2 className="text-xl font-bold text-foreground">
+                {isSignUp ? 'Create Account' : 'Welcome Back'}
+              </h2>
+              <p className="text-sm text-muted-foreground">
                 {isSignUp 
-                  ? 'Register your business and start managing vehicle inspections' 
+                  ? 'Register your business and start managing' 
                   : 'Sign in to access your account'
                 }
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <form onSubmit={handleSubmit} className="space-y-5">
-                {isSignUp && (
-                  <div className="space-y-2">
-                    <Label htmlFor="businessName" className="text-sm font-medium">Business Name</Label>
-                    <Input
-                      id="businessName"
-                      type="text"
-                      placeholder="Enter your business name"
-                      value={businessName}
-                      onChange={(e) => setBusinessName(e.target.value)}
-                      required
-                      className="h-14 text-base rounded-xl border-2 focus:border-primary/30"
-                    />
-                  </div>
-                )}
-
-                {isSignUp && (
-                  <div className="space-y-2">
-                    <Label htmlFor="name" className="text-sm font-medium">Your Full Name</Label>
-                    <Input
-                      id="name"
-                      type="text"
-                      placeholder="Enter your full name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                      className="h-14 text-base rounded-xl border-2 focus:border-primary/30"
-                    />
-                  </div>
-                )}
-                
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="h-14 text-base rounded-xl border-2 focus:border-primary/30"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm font-medium">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className="h-14 text-base rounded-xl border-2 focus:border-primary/30"
-                  />
-                </div>
-
-                <div className="pt-2">
-                  <Button
-                    type="submit"
-                    variant="mobile"
-                    className="w-full h-14 text-base font-semibold rounded-xl"
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                        {isSignUp ? 'Creating Account...' : 'Signing In...'}
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle2 className="w-5 h-5 mr-2" />
-                        {isSignUp ? 'Create Account' : 'Sign In'}
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </form>
-
-              <div className="mt-8 text-center">
-                <button
-                  type="button"
-                  onClick={() => setIsSignUp(!isSignUp)}
-                  className="text-primary hover:text-primary/80 text-sm font-medium transition-colors active:scale-95 py-2 px-4 rounded-lg"
-                >
-                  {isSignUp
-                    ? 'Already have an account? Sign in'
-                    : "Don't have a business account? Register now"
-                  }
-                </button>
-              </div>
-
-              {!isSignUp && (
-                <div className="mt-6 p-4 bg-accent/10 rounded-xl border border-accent/20">
-                  <p className="text-xs text-muted-foreground text-center leading-relaxed">
-                    <strong className="text-foreground">Staff members:</strong> Your admin will provide login credentials. 
-                    Contact your business administrator if you need access.
-                  </p>
-                </div>
+              </p>
+            </div>
+          </MobileCardHeader>
+          
+          <MobileCardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {isSignUp && (
+                <MobileInput
+                  id="businessName"
+                  type="text"
+                  placeholder="Business Name"
+                  value={businessName}
+                  onChange={(e) => setBusinessName(e.target.value)}
+                  required
+                  leftIcon={<Building2 className="w-5 h-5" />}
+                />
               )}
-            </CardContent>
-          </Card>
-        </div>
+
+              {isSignUp && (
+                <MobileInput
+                  id="name"
+                  type="text"
+                  placeholder="Full Name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  leftIcon={<User className="w-5 h-5" />}
+                />
+              )}
+              
+              <MobileInput
+                id="email"
+                type="email"
+                placeholder="Email Address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                leftIcon={<Mail className="w-5 h-5" />}
+              />
+              
+              <MobileInput
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                leftIcon={<Lock className="w-5 h-5" />}
+                rightIcon={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="p-1 hover:bg-accent rounded-full transition-colors"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                }
+              />
+
+              <div className="pt-4">
+                <Button
+                  type="submit"
+                  variant="mobile"
+                  className="w-full"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin mr-3" />
+                      {isSignUp ? 'Creating Account...' : 'Signing In...'}
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-5 h-5 mr-3" />
+                      {isSignUp ? 'Create Account' : 'Sign In'}
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+
+            {/* Toggle auth mode */}
+            <div className="mt-8 text-center">
+              <button
+                type="button"
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-primary hover:text-primary/80 font-medium transition-colors py-3 px-6 rounded-2xl hover:bg-accent/30 active:scale-95 transition-all duration-150"
+              >
+                {isSignUp
+                  ? 'Already have an account? Sign in'
+                  : "Don't have a business account? Register"
+                }
+              </button>
+            </div>
+
+            {/* Staff notice */}
+            {!isSignUp && (
+              <div className="mt-6 p-4 bg-accent/20 rounded-2xl border border-accent/30">
+                <p className="text-sm text-muted-foreground text-center leading-relaxed">
+                  <span className="font-semibold text-foreground">Staff members:</span> Your admin will provide login credentials
+                </p>
+              </div>
+            )}
+          </MobileCardContent>
+        </MobileCard>
       </div>
-    </div>
+      
+      {/* Bottom safe area */}
+      <div className="h-safe-area-inset-bottom bg-background" />
+    </MobileScreen>
   );
 };
 

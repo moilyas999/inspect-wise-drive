@@ -19,7 +19,8 @@ const buttonVariants = cva(
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         success: "bg-gradient-success text-success-foreground shadow-primary hover:shadow-none hover:scale-[0.98] active:scale-95",
-        mobile: "h-14 text-base font-semibold rounded-xl bg-gradient-primary text-primary-foreground shadow-primary hover:shadow-none hover:scale-[0.98] active:scale-95",
+        mobile: "h-14 text-base font-semibold rounded-2xl bg-gradient-primary text-primary-foreground shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-200",
+        touch: "h-12 px-6 text-sm font-semibold rounded-2xl active:scale-95 transition-all duration-150",
       },
       size: {
         default: "h-10 px-4 py-2",

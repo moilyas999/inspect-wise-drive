@@ -18,6 +18,16 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				sans: ['Inter', 'system-ui', 'sans-serif'],
+				mono: ['SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'monospace'],
+			},
+			spacing: {
+				'safe-area-inset-top': 'env(safe-area-inset-top)',
+				'safe-area-inset-bottom': 'env(safe-area-inset-bottom)',
+				'safe-area-inset-left': 'env(safe-area-inset-left)',
+				'safe-area-inset-right': 'env(safe-area-inset-right)',
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',

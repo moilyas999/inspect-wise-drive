@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
@@ -8,19 +7,12 @@ import { supabase } from '@/integrations/supabase/client';
 import CreateInspectionJobModal from '@/components/CreateInspectionJobModal';
 import { useNotifications } from '@/hooks/useNotifications';
 import { 
-  Car,
-  Clock, 
-  MapPin, 
-  PlayCircle, 
-  CheckCircle2, 
-  AlertCircle,
-  RefreshCw,
-  Plus,
-  Calendar,
-  Users,
-  DollarSign
+  Car, Clock, MapPin, PlayCircle, CheckCircle2, AlertCircle, RefreshCw, Plus, Calendar, Users, DollarSign 
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { MobileScreen } from '@/components/ui/mobile-container';
+import { MobileHeader } from '@/components/ui/mobile-header';
+import { MobileCard, MobileCardContent, MobileCardHeader, MobileCardTitle, MobileCardDescription } from '@/components/ui/mobile-card';
 
 interface InspectionJob {
   id: string;
@@ -146,123 +138,132 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
-      <div className="px-4 py-6 space-y-6 pb-20">
-        {/* Mobile-optimized header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h2 className="text-2xl font-bold text-foreground">Dashboard</h2>
-            <p className="text-muted-foreground text-sm">
-              Manage vehicle inspections for {business?.name}
-            </p>
-          </div>
-          
-          {inspectors.length > 0 && (
+    <MobileScreen>
+      <MobileHeader 
+        title="Dashboard" 
+        subtitle={`${business?.name}`}
+        rightAction={
+          inspectors.length > 0 && (
             <CreateInspectionJobModal onJobCreated={fetchJobs}>
-              <Button className="gap-2 h-12 rounded-xl">
+              <Button variant="touch" size="sm" className="gap-2">
                 <Plus className="w-4 h-4" />
-                New Inspection Job
+                <span className="hidden sm:inline">New Job</span>
               </Button>
             </CreateInspectionJobModal>
-          )}
-        </div>
+          )
+        }
+      />
 
-        {/* Mobile-optimized stats cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="shadow-card border-0 bg-card/80 backdrop-blur-sm rounded-xl">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Car className="w-4 h-4" />
-                Total Jobs
-              </CardTitle>
-              <div className="text-2xl font-bold text-primary">{jobs.length}</div>
-            </CardHeader>
-          </Card>
-          
-          <Card className="shadow-card border-0 bg-card/80 backdrop-blur-sm rounded-xl">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                In Progress
-              </CardTitle>
-              <div className="text-2xl font-bold text-warning">
-                {jobs.filter(job => job.status === 'in_progress').length}
+      <div className="space-y-6 pb-8">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 gap-4">
+          <MobileCard variant="flat" className="text-center p-4">
+            <div className="flex flex-col items-center space-y-2">
+              <div className="p-3 bg-primary/10 rounded-2xl">
+                <Car className="w-6 h-6 text-primary" />
               </div>
-            </CardHeader>
-          </Card>
-          
-          <Card className="shadow-card border-0 bg-card/80 backdrop-blur-sm rounded-xl">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4" />
-                Completed
-              </CardTitle>
-              <div className="text-2xl font-bold text-success">
-                {jobs.filter(job => job.status === 'submitted').length}
-              </div>
-            </CardHeader>
-          </Card>
-          
-          <Card className="shadow-card border-0 bg-card/80 backdrop-blur-sm rounded-xl">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                Inspectors
-              </CardTitle>
-              <div className="text-2xl font-bold text-primary">{inspectors.length}</div>
-            </CardHeader>
-          </Card>
-        </div>
-
-        {/* Mobile-optimized jobs list */}
-        <Card className="shadow-card border-0 bg-card/80 backdrop-blur-sm rounded-2xl">
-          <CardHeader>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <CardTitle className="flex items-center gap-2">
+                <div className="text-2xl font-bold text-foreground">{jobs.length}</div>
+                <div className="text-sm text-muted-foreground">Total Jobs</div>
+              </div>
+            </div>
+          </MobileCard>
+          
+          <MobileCard variant="flat" className="text-center p-4">
+            <div className="flex flex-col items-center space-y-2">
+              <div className="p-3 bg-warning/10 rounded-2xl">
+                <Clock className="w-6 h-6 text-warning" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-warning">
+                  {jobs.filter(job => job.status === 'in_progress').length}
+                </div>
+                <div className="text-sm text-muted-foreground">In Progress</div>
+              </div>
+            </div>
+          </MobileCard>
+          
+          <MobileCard variant="flat" className="text-center p-4">
+            <div className="flex flex-col items-center space-y-2">
+              <div className="p-3 bg-success/10 rounded-2xl">
+                <CheckCircle2 className="w-6 h-6 text-success" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-success">
+                  {jobs.filter(job => job.status === 'submitted').length}
+                </div>
+                <div className="text-sm text-muted-foreground">Completed</div>
+              </div>
+            </div>
+          </MobileCard>
+          
+          <MobileCard variant="flat" className="text-center p-4">
+            <div className="flex flex-col items-center space-y-2">
+              <div className="p-3 bg-primary/10 rounded-2xl">
+                <Users className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-primary">{inspectors.length}</div>
+                <div className="text-sm text-muted-foreground">Inspectors</div>
+              </div>
+            </div>
+          </MobileCard>
+        </div>
+
+        {/* Jobs List */}
+        <MobileCard variant="elevated">
+          <MobileCardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <MobileCardTitle className="flex items-center gap-2">
                   <Car className="w-5 h-5" />
-                  Vehicle Inspection Jobs
-                </CardTitle>
-                <CardDescription>
-                  Manage all vehicle purchase inspections
-                </CardDescription>
+                  Inspection Jobs
+                </MobileCardTitle>
+                <MobileCardDescription>
+                  Manage vehicle inspections
+                </MobileCardDescription>
               </div>
               <Button
-                variant="outline"
-                size="sm"
+                variant="ghost"
+                size="icon"
                 onClick={fetchJobs}
-                className="gap-2 h-10 rounded-xl"
+                className="h-10 w-10 rounded-full"
               >
                 <RefreshCw className="w-4 h-4" />
-                Refresh
               </Button>
             </div>
-          </CardHeader>
+          </MobileCardHeader>
           
-          <CardContent>
+          <MobileCardContent>
             {jobs.length === 0 ? (
-              <div className="text-center space-y-4 py-12">
-                <Car className="w-16 h-16 text-muted-foreground mx-auto" />
+              <div className="text-center space-y-6 py-12">
+                <div className="w-20 h-20 bg-muted/30 rounded-3xl flex items-center justify-center mx-auto">
+                  <Car className="w-10 h-10 text-muted-foreground" />
+                </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">No Inspection Jobs Yet</h3>
-                  <p className="text-muted-foreground mb-6 text-sm">
-                    Create your first vehicle inspection job to get started with your dealership operations.
+                  <h3 className="text-lg font-semibold text-foreground mb-2">No Jobs Yet</h3>
+                  <p className="text-sm text-muted-foreground mb-6 max-w-xs mx-auto">
+                    Create your first vehicle inspection job to get started.
                   </p>
                   
                   {inspectors.length > 0 ? (
                     <CreateInspectionJobModal onJobCreated={fetchJobs}>
-                      <Button size="lg" className="gap-2 h-12 rounded-xl">
+                      <Button variant="mobile" className="gap-2">
                         <Plus className="w-5 h-5" />
-                        Create First Inspection Job
+                        Create First Job
                       </Button>
                     </CreateInspectionJobModal>
                   ) : (
                     <div className="space-y-3">
                       <p className="text-sm text-muted-foreground">
-                        You need to add staff members before creating inspection jobs.
+                        Add staff members first to create jobs
                       </p>
-                      <Button variant="outline" onClick={() => window.location.href = '/admin'} className="h-10 rounded-xl">
-                        Add Staff Members First
+                      <Button 
+                        variant="outline" 
+                        onClick={() => window.location.href = '/admin'}
+                        className="h-12 rounded-2xl"
+                      >
+                        Add Staff Members
                       </Button>
                     </div>
                   )}
@@ -271,94 +272,81 @@ const Dashboard = () => {
             ) : (
               <div className="space-y-4">
                 {jobs.map((job) => (
-                  <Card 
+                  <MobileCard 
                     key={job.id} 
-                    className={`border-l-4 ${getStatusColor(job.status)} transition-all hover:shadow-md rounded-2xl rounded-l-lg`}
+                    variant="bordered"
+                    interactive
+                    className={`border-l-4 ${getStatusColor(job.status)}`}
                   >
-                    <CardHeader className="pb-3">
+                    <div className="p-4 space-y-4">
                       <div className="flex items-start justify-between">
-                        <div className="space-y-2 flex-1 min-w-0">
-                          <CardTitle className="text-lg font-semibold truncate">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-foreground text-lg truncate">
                             {job.make} {job.model}
-                          </CardTitle>
-                          <CardDescription className="flex flex-col sm:flex-row sm:items-center gap-2">
-                            <span className="font-mono text-sm bg-muted px-2 py-1 rounded-lg">
-                              {job.reg}
-                            </span>
-                            {job.vin && (
-                              <span className="text-xs text-muted-foreground truncate">
-                                VIN: {job.vin}
-                              </span>
-                            )}
-                          </CardDescription>
-                        </div>
-                        <div className="ml-2">
-                          {getStatusBadge(job.status)}
+                          </h4>
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="px-3 py-1 bg-muted/50 rounded-full">
+                              <span className="text-sm font-mono font-medium">{job.reg}</span>
+                            </div>
+                            {getStatusBadge(job.status)}
+                          </div>
                         </div>
                       </div>
-                    </CardHeader>
-                    
-                    <CardContent className="space-y-3">
-                      <div className="grid grid-cols-1 gap-3 text-sm">
+                      
+                      <div className="space-y-2 text-sm">
                         {job.seller_address && (
                           <div className="flex items-center gap-2 text-muted-foreground">
-                            <MapPin className="w-4 h-4 flex-shrink-0" />
+                            <MapPin className="w-4 h-4 shrink-0" />
                             <span className="truncate">{job.seller_address}</span>
                           </div>
                         )}
                         
                         <div className={`flex items-center gap-2 ${getUrgencyColor(job.deadline)}`}>
-                          <Calendar className="w-4 h-4 flex-shrink-0" />
+                          <Calendar className="w-4 h-4 shrink-0" />
                           <span className="truncate">
-                            Deadline: {format(new Date(job.deadline), 'PP')}
+                            Due: {format(new Date(job.deadline), 'MMM d, yyyy')}
                           </span>
                         </div>
                         
                         {job.assigned_inspector && (
                           <div className="flex items-center gap-2 text-muted-foreground">
-                            <Users className="w-4 h-4 flex-shrink-0" />
-                            <span className="truncate">Assigned to: {job.assigned_inspector.name}</span>
+                            <Users className="w-4 h-4 shrink-0" />
+                            <span className="truncate">{job.assigned_inspector.name}</span>
                           </div>
                         )}
-                        
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Clock className="w-4 h-4 flex-shrink-0" />
-                          <span className="truncate">Created: {format(new Date(job.created_at), 'PP')}</span>
-                        </div>
                       </div>
                       
-                      <div className="flex gap-2 pt-2">
+                      <div className="flex gap-3 pt-2">
                         <Button
-                          variant="outline"
+                          variant="touch"
                           size="sm"
                           onClick={() => window.location.href = `/inspection/${job.id}`}
-                          className="gap-2 h-10 rounded-xl flex-1"
+                          className="flex-1 gap-2"
                         >
                           <PlayCircle className="w-4 h-4" />
-                          {job.status === 'submitted' ? 'View Report' : 'Continue Inspection'}
+                          {job.status === 'submitted' ? 'View Report' : 'Continue'}
                         </Button>
                         {job.status === 'submitted' && (
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => window.location.href = `/negotiation/${job.id}`}
-                            className="gap-2 h-10 rounded-xl flex-1"
+                            className="flex-1 gap-2 rounded-2xl active:scale-95 transition-all"
                           >
                             <DollarSign className="w-4 h-4" />
-                            {job.negotiation_status === 'agreed' ? 'View Agreement' :
-                             job.negotiation_status === 'pending_user' ? 'Respond' : 'Negotiate Price'}
+                            {job.negotiation_status === 'agreed' ? 'Agreement' : 'Negotiate'}
                           </Button>
                         )}
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </MobileCard>
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </MobileCardContent>
+        </MobileCard>
       </div>
-    </div>
+    </MobileScreen>
   );
 };
 
