@@ -14,6 +14,7 @@ import Inspection from "./pages/Inspection";
 import UserNegotiation from "./pages/UserNegotiation";
 import AdminNegotiation from "./pages/AdminNegotiation";
 import NotFound from "./pages/NotFound";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 
 const queryClient = new QueryClient();
 
@@ -122,6 +123,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <OfflineIndicator />
         <BrowserRouter>
           <AppRoutes />
         </BrowserRouter>

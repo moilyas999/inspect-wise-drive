@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { pushNotificationService } from '@/services/pushNotifications';
 
 type UserRole = 'admin' | 'staff' | null;
 
@@ -63,6 +64,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const role = await fetchUserRole(session.user.id);
             setUserRole(role);
             setLoading(false);
+            // Initialize push notifications
+            try {
+              await pushNotificationService.initialize();
+            } catch (error) {
+              console.warn('Push notifications not available:', error);
+            }
           }, 0);
         } else {
           setUserRole(null);
@@ -116,6 +123,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signOut = async () => {
+    try {
+      await pushNotificationService.removeToken();
+    } catch (error) {
+      console.warn('Failed to remove push token:', error);
+    }
     setUserRole(null);
     await supabase.auth.signOut();
   };
