@@ -27,7 +27,7 @@ import { format } from 'date-fns';
 const StaffManagement = () => {
   const [staff, setStaff] = useState<Inspector[]>([]);
   const [loading, setLoading] = useState(true);
-  const { getStaffMembers, deactivateStaffMember, resetStaffPassword, business } = useBusinessData();
+  const { getStaffMembers, deactivateStaffMember, resetStaffPassword, business, businessId, loading: businessLoading } = useBusinessData();
   const { toast } = useToast();
 
   const fetchStaff = async () => {
@@ -61,8 +61,15 @@ const StaffManagement = () => {
   };
 
   useEffect(() => {
-    fetchStaff();
-  }, []);
+    // Only fetch staff when business data is loaded and businessId is available
+    if (!businessLoading && businessId) {
+      fetchStaff();
+    } else if (!businessLoading && !businessId) {
+      // Business data loaded but no businessId found
+      setLoading(false);
+      setStaff([]);
+    }
+  }, [businessLoading, businessId]);
 
   const handleDeactivateStaff = async (inspectorId: string, name: string) => {
     try {
