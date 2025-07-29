@@ -69,12 +69,16 @@ const RoleBasedHome = () => {
   return <Navigate to="/auth" replace />;
 };
 
-const AppRoutes = () => {
+const NotificationManager = () => {
   // Enable notifications for all authenticated users
   useNotifications({
     enableBrowserNotifications: true,
     enableToastNotifications: true
   });
+  return null;
+};
+
+const AppRoutes = () => {
 
   return (
   <Routes>
@@ -134,6 +138,7 @@ const App = () => (
         <Sonner />
         <OfflineIndicator />
         <BrowserRouter>
+          <NotificationManager />
           <AppRoutes />
         </BrowserRouter>
       </TooltipProvider>
