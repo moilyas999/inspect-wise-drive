@@ -25,16 +25,16 @@ serve(async (req) => {
     })
 
     // Get request data
-    const { name, email, businessId, createdBy } = await req.json()
+    const { name, email, password, businessId, createdBy } = await req.json()
     
     console.log('Creating staff member:', { name, email, businessId, createdBy })
 
     // Validate input
-    if (!name?.trim() || !email?.trim() || !businessId || !createdBy) {
+    if (!name?.trim() || !email?.trim() || !password || !businessId || !createdBy) {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: { message: 'Missing required fields: name, email, businessId, or createdBy' }
+          error: { message: 'Missing required fields: name, email, password, businessId, or createdBy' }
         }),
         { 
           status: 400, 
@@ -43,15 +43,10 @@ serve(async (req) => {
       )
     }
 
-    // Generate a secure temporary password
-    const tempPassword = crypto.randomUUID().replace(/-/g, '').substring(0, 12)
-    
-    console.log('Generated temp password for:', email)
-
-    // Create the user with admin client
+    // Create the user with admin client using provided password
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: email.trim(),
-      password: tempPassword,
+      password: password,
       email_confirm: true,
       user_metadata: {
         name: name.trim(),
@@ -143,18 +138,7 @@ serve(async (req) => {
       }
     }
 
-    // Send password reset email so they can set their own password
-    const { error: resetError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'recovery',
-      email: email.trim(),
-      options: {
-        redirectTo: `${req.headers.get('origin') || 'https://d39f9b30-5d3d-42e9-810a-ada976398a04.lovableproject.com'}/auth`
-      }
-    })
-
-    if (resetError) {
-      console.warn('Password reset email failed:', resetError)
-    }
+    // Note: Email with credentials will be sent by the calling function
 
     console.log('Staff member created successfully:', authData.user.id)
 

@@ -11,7 +11,7 @@ interface EmailRequest {
   name: string;
   type: 'staff_invitation' | 'password_reset';
   businessName?: string;
-  resetLink?: string;
+  password?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -21,7 +21,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { to, name, type, businessName, resetLink }: EmailRequest = await req.json();
+    const { to, name, type, businessName, password }: EmailRequest = await req.json();
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -36,23 +36,28 @@ const handler = async (req: Request): Promise<Response> => {
       htmlContent = `
         <h1>Welcome ${name}!</h1>
         <p>You have been added as a staff member to ${businessName || 'the inspection system'}.</p>
-        <p>To get started:</p>
-        <ol>
-          <li>Check your email for a password reset link</li>
-          <li>Set up your password</li>
-          <li>Login to start performing inspections</li>
-        </ol>
+        <p><strong>Your login credentials:</strong></p>
+        <ul>
+          <li><strong>Email:</strong> ${to}</li>
+          <li><strong>Password:</strong> ${password}</li>
+        </ul>
+        <p>Please login at your earliest convenience to start performing inspections.</p>
+        <p>For security, we recommend changing your password after your first login.</p>
         <p>If you have any questions, please contact your administrator.</p>
         <p>Best regards,<br>The Vehicle Inspection Team</p>
       `;
     } else if (type === 'password_reset') {
-      subject = 'Reset Your Password';
+      subject = 'Your New Password';
       htmlContent = `
-        <h1>Password Reset Request</h1>
+        <h1>Password Reset</h1>
         <p>Hi ${name},</p>
-        <p>You requested to reset your password. Click the link below to set a new password:</p>
-        <p><a href="${resetLink}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Reset Password</a></p>
-        <p>If you didn't request this, you can safely ignore this email.</p>
+        <p>Your password has been reset. Here are your new login credentials:</p>
+        <ul>
+          <li><strong>Email:</strong> ${to}</li>
+          <li><strong>New Password:</strong> ${password}</li>
+        </ul>
+        <p>Please login with these credentials and consider changing your password for security.</p>
+        <p>If you didn't request this password reset, please contact your administrator immediately.</p>
         <p>Best regards,<br>The Vehicle Inspection Team</p>
       `;
     }

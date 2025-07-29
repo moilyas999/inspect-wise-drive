@@ -87,13 +87,17 @@ export const useBusinessData = () => {
     }
 
     try {
-      console.log('Creating staff member via edge function:', { name, email, businessId, userId: user?.id });
+      console.log('Creating staff member:', { name, email, businessId, userId: user?.id });
 
-      // Call edge function to create staff member server-side
+      // Generate a random password
+      const password = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+      
+      // Create the user using edge function
       const { data, error } = await supabase.functions.invoke('create-staff', {
         body: {
           name: name.trim(),
           email: email.trim(),
+          password: password,
           businessId: businessId,
           createdBy: user?.id
         }
@@ -111,60 +115,50 @@ export const useBusinessData = () => {
         throw new Error(data.error?.message || 'Failed to create staff member');
       }
 
+      // Send welcome email with login credentials
+      try {
+        const { data: emailData, error: emailError } = await supabase.functions.invoke('send-email', {
+          body: {
+            to: email.trim(),
+            name: name.trim(),
+            type: 'staff_invitation',
+            businessName: business?.name,
+            password: password
+          }
+        });
+
+        if (emailError) {
+          console.warn('Failed to send welcome email:', emailError);
+        } else {
+          console.log('Welcome email sent successfully:', emailData);
+        }
+      } catch (emailError) {
+        console.warn('Error sending welcome email:', emailError);
+      }
+
       console.log('Staff member created successfully:', data.user);
       return { success: true, user: data.user };
 
     } catch (error: any) {
       console.error('Error in createStaffMember:', error);
-      
-      // Fallback: Try the original browser method if edge function fails
-      try {
-        console.log('Attempting fallback browser method...');
-        
-        const tempPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
-        
-        const { data: fallbackData, error: fallbackError } = await supabase.auth.signUp({
-          email: email.trim(),
-          password: tempPassword,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth`,
-            data: {
-              name: name.trim(),
-              role: 'staff',
-              created_by: user?.id,
-              business_id: businessId
-            }
-          }
-        });
-
-        if (fallbackError) {
-          throw fallbackError;
+      return { 
+        success: false, 
+        error: { 
+          message: error.message || 'Failed to create staff member' 
         }
-
-        // Send password reset email
-        await supabase.auth.resetPasswordForEmail(email.trim(), {
-          redirectTo: `${window.location.origin}/auth`
-        });
-
-        console.log('Fallback method succeeded:', fallbackData.user?.id);
-        return { success: true, user: fallbackData.user };
-
-      } catch (fallbackError: any) {
-        console.error('Both methods failed:', fallbackError);
-        return { 
-          success: false, 
-          error: { 
-            message: fallbackError.message || error.message || 'Failed to create staff member' 
-          }
-        };
-      }
+      };
     }
   };
 
   const getStaffMembers = async (): Promise<Inspector[]> => {
-    if (!businessId) return [];
+    if (!businessId) {
+      console.log('No businessId available for fetching staff');
+      return [];
+    }
 
     try {
+      console.log('Fetching staff members for businessId:', businessId);
+      
       const { data, error } = await supabase
         .from('inspectors')
         .select('*')
@@ -172,8 +166,16 @@ export const useBusinessData = () => {
         .eq('status', 'active')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return (data || []) as Inspector[];
+      console.log('Staff query result:', { data, error, businessId });
+
+      if (error) {
+        console.error('Database error fetching staff:', error);
+        throw error;
+      }
+      
+      const staff = (data || []) as Inspector[];
+      console.log('Returning staff members:', staff.length, 'members');
+      return staff;
     } catch (error) {
       console.error('Error fetching staff members:', error);
       return [];
@@ -198,40 +200,50 @@ export const useBusinessData = () => {
 
   const resetStaffPassword = async (email: string) => {
     try {
-      console.log('Attempting password reset for:', email);
+      console.log('Resetting password for:', email);
       
-      // First try Supabase auth reset
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth`
+      // Generate a new random password
+      const newPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+      
+      // Get staff member name
+      const staffMember = await getStaffMembers().then(members => 
+        members.find(m => m.email === email)
+      );
+      const staffName = staffMember?.name || 'User';
+
+      // Update password using admin function (this would need to be implemented in edge function)
+      const { data, error } = await supabase.functions.invoke('reset-staff-password', {
+        body: {
+          email: email.trim(),
+          newPassword: newPassword
+        }
       });
 
       if (error) {
-        console.error('Supabase reset error:', error);
-        
-        // Try sending custom email via edge function
-        const { data: emailData, error: emailError } = await supabase.functions.invoke('send-email', {
-          body: {
-            to: email,
-            name: 'User', // We could get the name from the staff list
-            type: 'password_reset',
-            resetLink: `${window.location.origin}/auth`
-          }
-        });
+        console.error('Password reset error:', error);
+        throw new Error('Failed to reset password');
+      }
 
-        if (emailError) {
-          console.error('Custom email error:', emailError);
-          throw new Error('Failed to send password reset email via both methods');
+      // Send email with new password
+      const { data: emailData, error: emailError } = await supabase.functions.invoke('send-email', {
+        body: {
+          to: email,
+          name: staffName,
+          type: 'password_reset',
+          password: newPassword
         }
+      });
 
-        console.log('Custom email sent successfully:', emailData);
+      if (emailError) {
+        console.warn('Failed to send password email:', emailError);
       } else {
-        console.log('Supabase reset email sent successfully');
+        console.log('Password reset email sent successfully:', emailData);
       }
 
       return { success: true };
     } catch (error: any) {
       console.error('Error resetting password:', error);
-      return { success: false, error: { message: error.message || 'Failed to send reset email' } };
+      return { success: false, error: { message: error.message || 'Failed to reset password' } };
     }
   };
 
