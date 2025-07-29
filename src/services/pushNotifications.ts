@@ -34,8 +34,18 @@ class PushNotificationService {
   // Simplified notification for web compatibility
   private async storeNotificationPreference(userId: string) {
     try {
-      // Just log for now - no database table needed
-      console.log('Notification preference stored for user:', userId);
+      const { error } = await supabase
+        .from('user_push_tokens')
+        .upsert({
+          user_id: userId,
+          token: 'web-token-' + Date.now(),
+          platform: 'web',
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) {
+        console.error('Error storing notification preference:', error);
+      }
     } catch (error) {
       console.error('Error storing notification preference:', error);
     }
@@ -80,7 +90,17 @@ class PushNotificationService {
   }
 
   async removeToken() {
-    console.log('Notification token removed (simplified)');
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from('user_push_tokens')
+          .delete()
+          .eq('user_id', user.id);
+      }
+    } catch (error) {
+      console.error('Error removing push token:', error);
+    }
   }
 }
 
