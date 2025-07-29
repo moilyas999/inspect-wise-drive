@@ -44,16 +44,14 @@ serve(async (req) => {
       // Use provided tokens
       pushTokens = tokens;
     } else if (userId) {
-      // Get user's push tokens from database
+      // Get user's FCM tokens from database
       const { data: tokenData, error } = await supabase
-        .from('user_push_tokens')
+        .from('fcm_tokens')
         .select('token')
-        .eq('user_id', userId)
-        .eq('is_active', true)
-        .eq('platform', 'android');
+        .eq('user_id', userId);
         
       if (error) {
-        console.error('Error fetching user tokens:', error);
+        console.error('Error fetching FCM tokens:', error);
         throw error;
       }
       

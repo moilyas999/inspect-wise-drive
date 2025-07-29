@@ -3,6 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useNotificationTriggers } from "@/hooks/useNotificationTriggers";
+import { firebaseMessagingService } from "@/services/firebaseMessaging";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import Auth from "./pages/Auth";
@@ -16,6 +18,7 @@ import UserNegotiation from "./pages/UserNegotiation";
 import AdminNegotiation from "./pages/AdminNegotiation";
 import NotFound from "./pages/NotFound";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
+import React from "react";
 
 const queryClient = new QueryClient();
 
@@ -75,6 +78,15 @@ const NotificationManager = () => {
     enableBrowserNotifications: true,
     enableToastNotifications: true
   });
+  
+  // Set up notification triggers for key events
+  useNotificationTriggers();
+  
+  // Initialize Firebase messaging
+  React.useEffect(() => {
+    firebaseMessagingService.initialize();
+  }, []);
+  
   return null;
 };
 
