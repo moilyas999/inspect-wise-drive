@@ -22,23 +22,34 @@ const StaffManagementModal = ({ onStaffCreated, children }: StaffManagementModal
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!name.trim() || !email.trim()) {
       toast({
         title: "Validation Error",
-        description: "Please fill in all required fields",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!email.includes('@')) {
+      toast({
+        title: "Validation Error", 
+        description: "Please enter a valid email address",
         variant: "destructive",
       });
       return;
     }
 
     setLoading(true);
+
     try {
       const result = await createStaffMember(name.trim(), email.trim());
       
       if (result.success) {
         toast({
           title: "Staff Member Added",
-          description: `${name} has been added to your team. They will receive login instructions via email.`,
+          description: `${name} has been added successfully. They will receive an email to set their password.`,
         });
         
         // Reset form
@@ -47,16 +58,30 @@ const StaffManagementModal = ({ onStaffCreated, children }: StaffManagementModal
         setOpen(false);
         onStaffCreated();
       } else {
+        // Handle specific error cases
+        let errorMessage = 'Failed to create staff member';
+        
+        if (result.error?.message?.includes('User already registered')) {
+          errorMessage = 'A user with this email already exists. Please use a different email address.';
+        } else if (result.error?.message?.includes('Invalid email')) {
+          errorMessage = 'Please enter a valid email address.';
+        } else if (result.error?.message?.includes('Database error')) {
+          errorMessage = 'Database error occurred. Please try again or contact support.';
+        } else if (result.error?.message) {
+          errorMessage = result.error.message;
+        }
+        
         toast({
-          title: "Error",
-          description: result.error?.message || "Failed to create staff member",
+          title: "Error Adding Staff Member",
+          description: errorMessage,
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error creating staff member:', error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {

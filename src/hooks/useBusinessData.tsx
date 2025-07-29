@@ -87,39 +87,36 @@ export const useBusinessData = () => {
     }
 
     try {
-      // Create auth user for staff member
-      const { data, error } = await supabase.auth.admin.createUser({
+      // Generate a temporary password for the staff member
+      const tempPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+      
+      // Create auth user for staff member using regular signup
+      const { data, error } = await supabase.auth.signUp({
         email,
-        password: Math.random().toString(36).slice(-8), // Temporary password
-        email_confirm: true,
-        user_metadata: {
-          name,
-          role: 'staff',
-          created_by: user?.id,
-          business_id: businessId
+        password: tempPassword,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth`,
+          data: {
+            name,
+            role: 'staff',
+            created_by: user?.id,
+            business_id: businessId
+          }
         }
       });
 
       if (error) throw error;
 
-      // Update the inspector record with business_id
       if (data.user) {
-        const { error: updateError } = await supabase
-          .from('inspectors')
-          .update({ 
-            business_id: businessId,
-            created_by: user?.id 
-          })
-          .eq('user_id', data.user.id);
-
-        if (updateError) {
-          console.error('Error updating inspector business_id:', updateError);
-        }
-
-        // Send password reset email
-        await supabase.auth.resetPasswordForEmail(email, {
+        // The trigger function will automatically create the inspector record
+        // Just send password reset email so they can set their own password
+        const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}/auth`
         });
+
+        if (resetError) {
+          console.warn('Password reset email failed:', resetError);
+        }
       }
 
       return { success: true, user: data.user };
