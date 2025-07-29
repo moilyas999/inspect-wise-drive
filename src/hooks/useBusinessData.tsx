@@ -87,42 +87,77 @@ export const useBusinessData = () => {
     }
 
     try {
-      // Generate a temporary password for the staff member
-      const tempPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
-      
-      // Create auth user for staff member using regular signup
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password: tempPassword,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth`,
-          data: {
-            name,
-            role: 'staff',
-            created_by: user?.id,
-            business_id: businessId
-          }
+      console.log('Creating staff member via edge function:', { name, email, businessId, userId: user?.id });
+
+      // Call edge function to create staff member server-side
+      const { data, error } = await supabase.functions.invoke('create-staff', {
+        body: {
+          name: name.trim(),
+          email: email.trim(),
+          businessId: businessId,
+          createdBy: user?.id
         }
       });
 
-      if (error) throw error;
+      console.log('Edge function response:', { data, error });
 
-      if (data.user) {
-        // The trigger function will automatically create the inspector record
-        // Just send password reset email so they can set their own password
-        const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Failed to create staff member');
+      }
+
+      if (!data.success) {
+        console.error('Staff creation failed:', data.error);
+        throw new Error(data.error?.message || 'Failed to create staff member');
+      }
+
+      console.log('Staff member created successfully:', data.user);
+      return { success: true, user: data.user };
+
+    } catch (error: any) {
+      console.error('Error in createStaffMember:', error);
+      
+      // Fallback: Try the original browser method if edge function fails
+      try {
+        console.log('Attempting fallback browser method...');
+        
+        const tempPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+        
+        const { data: fallbackData, error: fallbackError } = await supabase.auth.signUp({
+          email: email.trim(),
+          password: tempPassword,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth`,
+            data: {
+              name: name.trim(),
+              role: 'staff',
+              created_by: user?.id,
+              business_id: businessId
+            }
+          }
+        });
+
+        if (fallbackError) {
+          throw fallbackError;
+        }
+
+        // Send password reset email
+        await supabase.auth.resetPasswordForEmail(email.trim(), {
           redirectTo: `${window.location.origin}/auth`
         });
 
-        if (resetError) {
-          console.warn('Password reset email failed:', resetError);
-        }
-      }
+        console.log('Fallback method succeeded:', fallbackData.user?.id);
+        return { success: true, user: fallbackData.user };
 
-      return { success: true, user: data.user };
-    } catch (error) {
-      console.error('Error creating staff member:', error);
-      return { success: false, error };
+      } catch (fallbackError: any) {
+        console.error('Both methods failed:', fallbackError);
+        return { 
+          success: false, 
+          error: { 
+            message: fallbackError.message || error.message || 'Failed to create staff member' 
+          }
+        };
+      }
     }
   };
 
