@@ -399,7 +399,7 @@ const AdminDashboard = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => navigate(`/inspection-review/${job.id}`)}
+                            onClick={() => navigate(`/admin/inspection/${job.id}`)}
                             className="flex-1 gap-2 h-12 rounded-2xl"
                           >
                             <Eye className="w-4 h-4" />
@@ -410,10 +410,21 @@ const AdminDashboard = () => {
                               variant="outline"
                               size="sm"
                               onClick={() => navigate(`/admin/negotiation/${job.id}`)}
-                              className="flex-1 gap-2 h-12 rounded-2xl"
+                              className="gap-2 h-12 rounded-2xl"
                             >
                               <DollarSign className="w-4 h-4" />
                               Negotiate
+                            </Button>
+                          )}
+                          {job.vehicle_id && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => navigate(`/admin/vehicle/${job.vehicle_id}`)}
+                              className="gap-2 h-12 rounded-2xl"
+                            >
+                              <Car className="w-4 h-4" />
+                              Vehicle
                             </Button>
                           )}
                         </div>
