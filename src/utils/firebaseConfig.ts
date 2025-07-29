@@ -11,10 +11,15 @@ const firebaseConfig = {
   appId: "1:123456789:web:abcdef123456", // Replace with your actual app ID
 };
 
+console.log('Initializing Firebase app...');
 const app = initializeApp(firebaseConfig);
-const messaging = getMessaging(app);
+console.log('Firebase app initialized:', app);
 
-export { messaging, getToken, onMessage };
+console.log('Getting Firebase messaging...');
+const messaging = getMessaging(app);
+console.log('Firebase messaging initialized:', messaging);
+
+export { messaging, getToken, onMessage, firebaseConfig };
 
 // Instructions to get these values:
 // 1. Go to Firebase Console: https://console.firebase.google.com/
