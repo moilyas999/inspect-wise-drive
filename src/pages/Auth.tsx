@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { Loader2, CheckCircle2, Building2 } from 'lucide-react';
 
 const Auth = () => {
@@ -35,8 +36,20 @@ const Auth = () => {
       let result;
       
       if (isSignUp) {
-        // Admin signup with business creation
-        result = await signUp(email, password, name, 'admin', businessName);
+        // Admin signup with business creation using direct Supabase call
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`,
+            data: {
+              role: 'admin',
+              business_name: businessName,
+              name: name
+            }
+          }
+        });
+        result = { data, error };
       } else {
         // Regular login for both admin and staff
         result = await signIn(email, password);
