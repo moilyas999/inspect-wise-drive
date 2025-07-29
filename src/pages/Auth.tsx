@@ -4,17 +4,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, CheckCircle2, Car } from 'lucide-react';
+import { Loader2, CheckCircle2, Car, UserCog, HardHat } from 'lucide-react';
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [role, setRole] = useState('staff');
   const [loading, setLoading] = useState(false);
-  const { user, signIn, signUp } = useAuth();
+  const { user, userRole, signIn, signUp } = useAuth();
   const { toast } = useToast();
 
   if (user) {
@@ -27,7 +29,7 @@ const Auth = () => {
 
     try {
       const result = isSignUp 
-        ? await signUp(email, password, name)
+        ? await signUp(email, password, name, role)
         : await signIn(email, password);
 
       if (result.error) {
@@ -95,6 +97,32 @@ const Auth = () => {
                   />
                 </div>
               )}
+
+              {isSignUp && (
+                <div className="space-y-2">
+                  <Label htmlFor="role">Role</Label>
+                  <Select value={role} onValueChange={setRole}>
+                    <SelectTrigger className="h-12">
+                      <SelectValue placeholder="Select your role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="staff">
+                        <div className="flex items-center gap-2">
+                          <HardHat className="w-4 h-4" />
+                          <span>Staff Inspector</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="admin">
+                        <div className="flex items-center gap-2">
+                          <UserCog className="w-4 h-4" />
+                          <span>Admin Manager</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
               
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>

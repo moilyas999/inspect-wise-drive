@@ -6,13 +6,14 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import Inspection from "./pages/Inspection";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
+const ProtectedRoute = ({ children, requiredRole }: { children: React.ReactNode, requiredRole?: 'admin' | 'staff' }) => {
+  const { user, userRole, loading } = useAuth();
   
   if (loading) {
     return (
@@ -25,19 +26,58 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
   
-  return user ? <>{children}</> : <Navigate to="/auth" replace />;
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  if (requiredRole && userRole !== requiredRole) {
+    // Redirect to appropriate dashboard based on role
+    const redirectPath = userRole === 'admin' ? '/admin' : '/dashboard';
+    return <Navigate to={redirectPath} replace />;
+  }
+  
+  return <>{children}</>;
+};
+
+const RoleBasedHome = () => {
+  const { userRole, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (userRole === 'admin') {
+    return <Navigate to="/admin" replace />;
+  } else if (userRole === 'staff') {
+    return <Navigate to="/dashboard" replace />;
+  }
+  
+  return <Navigate to="/auth" replace />;
 };
 
 const AppRoutes = () => (
   <Routes>
     <Route path="/auth" element={<Auth />} />
-    <Route path="/" element={
-      <ProtectedRoute>
+    <Route path="/" element={<RoleBasedHome />} />
+    <Route path="/admin" element={
+      <ProtectedRoute requiredRole="admin">
+        <AdminDashboard />
+      </ProtectedRoute>
+    } />
+    <Route path="/dashboard" element={
+      <ProtectedRoute requiredRole="staff">
         <Dashboard />
       </ProtectedRoute>
     } />
     <Route path="/inspection/:jobId" element={
-      <ProtectedRoute>
+      <ProtectedRoute requiredRole="staff">
         <Inspection />
       </ProtectedRoute>
     } />
