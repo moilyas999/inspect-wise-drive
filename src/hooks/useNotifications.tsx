@@ -20,18 +20,29 @@ export const useNotifications = (config: NotificationConfig = {}) => {
 
     // Initialize push notifications
     const initNotifications = async () => {
-      const isInitialized = await pushNotificationService.initialize();
-      setIsSubscribed(isInitialized);
+      console.log('🔔 useNotifications: Starting notification initialization for user:', user?.id);
       
-      // Fallback to web notifications if push notifications are not available
-      if (!isInitialized && enableBrowserNotifications && 'Notification' in window) {
-        if (Notification.permission === 'default') {
-          Notification.requestPermission().then(permission => {
-            setIsSubscribed(permission === 'granted');
-          });
-        } else {
-          setIsSubscribed(Notification.permission === 'granted');
+      try {
+        const isInitialized = await pushNotificationService.initialize();
+        console.log('🔔 useNotifications: Push service initialized:', isInitialized);
+        setIsSubscribed(isInitialized);
+        
+        // Fallback to web notifications if push notifications are not available
+        if (!isInitialized && enableBrowserNotifications && 'Notification' in window) {
+          console.log('🔔 useNotifications: Falling back to web notifications');
+          if (Notification.permission === 'default') {
+            console.log('🔔 useNotifications: Requesting web notification permission');
+            Notification.requestPermission().then(permission => {
+              console.log('🔔 useNotifications: Web permission result:', permission);
+              setIsSubscribed(permission === 'granted');
+            });
+          } else {
+            console.log('🔔 useNotifications: Web permission already set:', Notification.permission);
+            setIsSubscribed(Notification.permission === 'granted');
+          }
         }
+      } catch (error) {
+        console.error('🔔 useNotifications: Error during initialization:', error);
       }
     };
 
