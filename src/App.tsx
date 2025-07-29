@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import Inspection from "./pages/Inspection";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,11 @@ const AppRoutes = () => (
     <Route path="/" element={
       <ProtectedRoute>
         <Dashboard />
+      </ProtectedRoute>
+    } />
+    <Route path="/inspection/:jobId" element={
+      <ProtectedRoute>
+        <Inspection />
       </ProtectedRoute>
     } />
     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

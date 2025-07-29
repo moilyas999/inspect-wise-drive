@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { createSampleJobs, getInspectorId } from '@/lib/sampleData';
 import { 
   Car, 
   Clock, 
@@ -14,7 +15,8 @@ import {
   LogOut, 
   CheckCircle2, 
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  Plus
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -33,6 +35,7 @@ interface InspectionJob {
 const Dashboard = () => {
   const [jobs, setJobs] = useState<InspectionJob[]>([]);
   const [loading, setLoading] = useState(true);
+  const [creatingJobs, setCreatingJobs] = useState(false);
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -54,6 +57,44 @@ const Dashboard = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateSampleJobs = async () => {
+    setCreatingJobs(true);
+    try {
+      const inspectorId = await getInspectorId();
+      if (!inspectorId) {
+        toast({
+          title: "Error",
+          description: "Inspector profile not found",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const result = await createSampleJobs(inspectorId);
+      if (result.success) {
+        toast({
+          title: "Sample Jobs Created",
+          description: "3 sample inspection jobs have been added to your dashboard",
+        });
+        fetchJobs(); // Refresh the jobs list
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to create sample jobs",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setCreatingJobs(false);
     }
   };
 
@@ -159,23 +200,63 @@ const Dashboard = () => {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-foreground">Inspection Jobs</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={fetchJobs}
-              className="gap-2"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Refresh
-            </Button>
+            <div className="flex gap-2">
+              {jobs.length === 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCreateSampleJobs}
+                  disabled={creatingJobs}
+                  className="gap-2"
+                >
+                  {creatingJobs ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Plus className="w-4 h-4" />
+                  )}
+                  Add Sample Jobs
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={fetchJobs}
+                className="gap-2"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Refresh
+              </Button>
+            </div>
           </div>
 
           {jobs.length === 0 ? (
             <Card className="shadow-card border-0 bg-card/80 backdrop-blur-sm">
-              <CardContent className="py-12 text-center">
-                <Car className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-foreground mb-2">No Jobs Available</h3>
-                <p className="text-muted-foreground">Check back later for new inspection assignments.</p>
+              <CardContent className="py-12 text-center space-y-4">
+                <Car className="w-12 h-12 text-muted-foreground mx-auto" />
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground mb-2">No Jobs Available</h3>
+                  <p className="text-muted-foreground mb-4">
+                    No inspection assignments found. You can add some sample jobs to get started.
+                  </p>
+                  <Button
+                    onClick={handleCreateSampleJobs}
+                    disabled={creatingJobs}
+                    variant="mobile"
+                    className="gap-2"
+                  >
+                    {creatingJobs ? (
+                      <>
+                        <RefreshCw className="w-5 h-5 animate-spin" />
+                        Creating Jobs...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-5 h-5" />
+                        Add Sample Inspection Jobs
+                      </>
+                    )}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ) : (
