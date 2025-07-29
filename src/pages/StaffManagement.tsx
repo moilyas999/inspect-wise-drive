@@ -31,16 +31,30 @@ const StaffManagement = () => {
   const { toast } = useToast();
 
   const fetchStaff = async () => {
-    setLoading(true);
     try {
-      const staffData = await getStaffMembers();
-      setStaff(staffData);
-    } catch (error) {
+      setLoading(true);
+      console.log('Fetching staff members...');
+      
+      const staffMembers = await getStaffMembers();
+      console.log('Staff members fetched:', staffMembers);
+      
+      if (Array.isArray(staffMembers)) {
+        setStaff(staffMembers);
+        if (staffMembers.length === 0) {
+          console.log('No staff members found');
+        }
+      } else {
+        console.error('Staff members is not an array:', staffMembers);
+        setStaff([]);
+      }
+    } catch (error: any) {
+      console.error('Error fetching staff:', error);
       toast({
-        title: "Error",
-        description: "Failed to load staff members",
+        title: "Error Loading Staff",
+        description: error.message || "Failed to load staff members. Please refresh the page.",
         variant: "destructive",
       });
+      setStaff([]);
     } finally {
       setLoading(false);
     }

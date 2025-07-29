@@ -198,15 +198,40 @@ export const useBusinessData = () => {
 
   const resetStaffPassword = async (email: string) => {
     try {
+      console.log('Attempting password reset for:', email);
+      
+      // First try Supabase auth reset
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth`
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase reset error:', error);
+        
+        // Try sending custom email via edge function
+        const { data: emailData, error: emailError } = await supabase.functions.invoke('send-email', {
+          body: {
+            to: email,
+            name: 'User', // We could get the name from the staff list
+            type: 'password_reset',
+            resetLink: `${window.location.origin}/auth`
+          }
+        });
+
+        if (emailError) {
+          console.error('Custom email error:', emailError);
+          throw new Error('Failed to send password reset email via both methods');
+        }
+
+        console.log('Custom email sent successfully:', emailData);
+      } else {
+        console.log('Supabase reset email sent successfully');
+      }
+
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error resetting password:', error);
-      return { success: false, error };
+      return { success: false, error: { message: error.message || 'Failed to send reset email' } };
     }
   };
 
