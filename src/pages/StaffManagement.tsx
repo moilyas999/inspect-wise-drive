@@ -99,15 +99,25 @@ const StaffManagement = () => {
   const handleResetPassword = async (email: string, name: string) => {
     try {
       const result = await resetStaffPassword(email);
-      if (result.success) {
+      if (result.success && result.password) {
         toast({
-          title: "Password Reset Sent",
-          description: `Password reset instructions have been sent to ${name}`,
+          title: "Password Reset Successful",
+          description: (
+            <div className="space-y-2">
+              <p>New password for <strong>{name}</strong>:</p>
+              <div className="p-2 bg-muted rounded font-mono text-sm">
+                <strong>Email:</strong> {result.email}<br/>
+                <strong>Password:</strong> {result.password}
+              </div>
+              <p className="text-xs text-muted-foreground">Please share these credentials securely with the staff member.</p>
+            </div>
+          ),
+          duration: 10000,
         });
       } else {
         toast({
           title: "Error",
-          description: "Failed to send password reset",
+          description: "Failed to reset password",
           variant: "destructive",
         });
       }

@@ -61,10 +61,31 @@ const StaffManagementModal = ({ onStaffCreated, children }: StaffManagementModal
       
       console.log('Staff creation result:', result);
       
-      if (result.success) {
+      if (result.success && result.password) {
         toast({
           title: "✅ Staff Member Added Successfully",
-          description: `${name} has been added to your team. They will receive an email to set up their password.`,
+          description: (
+            <div className="space-y-2">
+              <p><strong>{name}</strong> has been added to your team.</p>
+              <div className="p-2 bg-muted rounded font-mono text-sm">
+                <strong>Email:</strong> {result.email}<br/>
+                <strong>Password:</strong> {result.password}
+              </div>
+              <p className="text-xs text-muted-foreground">Please share these credentials securely with the staff member.</p>
+            </div>
+          ),
+          duration: 10000,
+        });
+        
+        // Reset form
+        setName('');
+        setEmail('');
+        setOpen(false);
+        onStaffCreated();
+      } else if (result.success) {
+        toast({
+          title: "✅ Staff Member Added Successfully", 
+          description: `${name} has been added to your team.`,
         });
         
         // Reset form
@@ -172,7 +193,7 @@ const StaffManagementModal = ({ onStaffCreated, children }: StaffManagementModal
 
           <div className="bg-accent/20 p-3 rounded-lg">
             <p className="text-sm text-muted-foreground">
-              <strong>Note:</strong> The staff member will receive an email with instructions to set up their password.
+              <strong>Note:</strong> The staff member will receive login credentials that you can share with them directly.
             </p>
           </div>
 

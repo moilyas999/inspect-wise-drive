@@ -115,29 +115,15 @@ export const useBusinessData = () => {
         throw new Error(data.error?.message || 'Failed to create staff member');
       }
 
-      // Send welcome email with login credentials
-      try {
-        const { data: emailData, error: emailError } = await supabase.functions.invoke('send-email', {
-          body: {
-            to: email.trim(),
-            name: name.trim(),
-            type: 'staff_invitation',
-            businessName: business?.name,
-            password: password
-          }
-        });
-
-        if (emailError) {
-          console.warn('Failed to send welcome email:', emailError);
-        } else {
-          console.log('Welcome email sent successfully:', emailData);
-        }
-      } catch (emailError) {
-        console.warn('Error sending welcome email:', emailError);
-      }
-
-      console.log('Staff member created successfully:', data.user);
-      return { success: true, user: data.user };
+      console.log('Staff member created successfully with password:', password);
+      
+      // Return success with password for display in UI
+      return { 
+        success: true, 
+        user: data.user, 
+        password: password,
+        email: email.trim()
+      };
 
     } catch (error: any) {
       console.error('Error in createStaffMember:', error);
@@ -211,7 +197,7 @@ export const useBusinessData = () => {
       );
       const staffName = staffMember?.name || 'User';
 
-      // Update password using admin function (this would need to be implemented in edge function)
+      // Update password using admin function
       const { data, error } = await supabase.functions.invoke('reset-staff-password', {
         body: {
           email: email.trim(),
@@ -224,23 +210,15 @@ export const useBusinessData = () => {
         throw new Error('Failed to reset password');
       }
 
-      // Send email with new password
-      const { data: emailData, error: emailError } = await supabase.functions.invoke('send-email', {
-        body: {
-          to: email,
-          name: staffName,
-          type: 'password_reset',
-          password: newPassword
-        }
-      });
-
-      if (emailError) {
-        console.warn('Failed to send password email:', emailError);
-      } else {
-        console.log('Password reset email sent successfully:', emailData);
-      }
-
-      return { success: true };
+      console.log('Password reset successful, new password:', newPassword);
+      
+      // Return success with new password for display in UI
+      return { 
+        success: true, 
+        password: newPassword,
+        email: email.trim(),
+        name: staffName
+      };
     } catch (error: any) {
       console.error('Error resetting password:', error);
       return { success: false, error: { message: error.message || 'Failed to reset password' } };
