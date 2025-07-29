@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,15 +23,10 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { to, name, type, businessName, resetLink }: EmailRequest = await req.json();
 
-    // For now, just log the email that would be sent
-    // This will be updated once the user provides their Resend API key
-    console.log('Email would be sent:', {
-      to,
-      name,
-      type,
-      businessName,
-      resetLink
-    });
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
 
     let subject = '';
     let htmlContent = '';
@@ -61,12 +57,28 @@ const handler = async (req: Request): Promise<Response> => {
       `;
     }
 
-    // Return success for now - will actually send email once Resend is configured
+    // Send email using Supabase SMTP
+    const { data, error } = await supabase.auth.admin.sendEmail({
+      email: to,
+      type: 'email',
+      options: {
+        subject,
+        body: htmlContent
+      }
+    });
+
+    if (error) {
+      console.error('Error sending email via Supabase:', error);
+      throw error;
+    }
+
+    console.log('Email sent successfully via Supabase SMTP:', { to, subject });
+
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Email logged - Resend API key needed to actually send emails',
-        emailDetails: { to, subject, preview: htmlContent.substring(0, 100) + '...' }
+        message: 'Email sent successfully via Supabase SMTP',
+        data
       }),
       {
         status: 200,
