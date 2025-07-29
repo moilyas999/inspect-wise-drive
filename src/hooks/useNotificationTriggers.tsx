@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { firebaseMessagingService } from '@/services/firebaseMessaging';
 
 export const useNotificationTriggers = () => {
   const { user, userRole } = useAuth();
@@ -35,12 +34,14 @@ export const useNotificationTriggers = () => {
                 .single();
 
               if (inspector) {
-                // This will be sent to all admins in the business
-                await firebaseMessagingService.sendNotificationToUser(
-                  user.id,
-                  'New Vehicle Inspection Started',
-                  `${inspector.name} has started inspecting ${payload.new.reg}`
-                );
+                // Send notification via Supabase function
+                await supabase.functions.invoke('send-fcm-notification', {
+                  body: {
+                    userId: user.id,
+                    title: 'New Vehicle Inspection Started',
+                    body: `${inspector.name} has started inspecting ${payload.new.reg}`
+                  }
+                });
               }
             }
           )
@@ -68,11 +69,13 @@ export const useNotificationTriggers = () => {
                   .single();
 
                 if (inspector) {
-                  await firebaseMessagingService.sendNotificationToUser(
-                    user.id,
-                    'Vehicle Submitted',
-                    `${inspector.name} submitted ${payload.new.reg} for review`
-                  );
+                  await supabase.functions.invoke('send-fcm-notification', {
+                    body: {
+                      userId: user.id,
+                      title: 'Vehicle Submitted',
+                      body: `${inspector.name} submitted ${payload.new.reg} for review`
+                    }
+                  });
                 }
               }
             }
@@ -134,19 +137,23 @@ export const useNotificationTriggers = () => {
             
             if (isAdminOffer && staff) {
               // Admin made offer, notify staff
-              await firebaseMessagingService.sendNotificationToUser(
-                staff.user_id,
-                `New update from Admin on ${job.reg}`,
-                `Admin sent you a new ${newOffer.offer_type} for ${job.reg}`
-              );
+              await supabase.functions.invoke('send-fcm-notification', {
+                body: {
+                  userId: staff.user_id,
+                  title: `New update from Admin on ${job.reg}`,
+                  body: `Admin sent you a new ${newOffer.offer_type} for ${job.reg}`
+                }
+              });
             } else if (!isAdminOffer && admins) {
               // Staff made offer, notify all admins
               for (const admin of admins) {
-                await firebaseMessagingService.sendNotificationToUser(
-                  admin.user_id,
-                  `New update from ${staff?.name} on ${job.reg}`,
-                  `${staff?.name} sent a new ${newOffer.offer_type} for ${job.reg}`
-                );
+                await supabase.functions.invoke('send-fcm-notification', {
+                  body: {
+                    userId: admin.user_id,
+                    title: `New update from ${staff?.name} on ${job.reg}`,
+                    body: `${staff?.name} sent a new ${newOffer.offer_type} for ${job.reg}`
+                  }
+                });
               }
             }
           }

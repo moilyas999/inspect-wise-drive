@@ -1,5 +1,8 @@
+import { initializeApp } from "firebase/app";
+import { getMessaging, getToken, onMessage } from "firebase/messaging";
+
 // Firebase configuration - Replace with your actual Firebase project values
-export const firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyB5H9L8kVZQJ8ZZxQJ8ZZxQJ8ZZxQJ8ZZx", // Replace with your actual API key
   authDomain: "your-project.firebaseapp.com", // Replace with your actual domain
   projectId: "your-firebase-project", // Replace with your actual project ID
@@ -8,12 +11,10 @@ export const firebaseConfig = {
   appId: "1:123456789:web:abcdef123456", // Replace with your actual app ID
 };
 
-// Get VAPID key from environment/config at runtime
-export const getVapidKey = () => {
-  // In production, this should come from your environment variables
-  // For now, you'll need to replace this with your actual VAPID key
-  return "YOUR_VAPID_KEY_HERE"; // Replace with your actual VAPID key
-};
+const app = initializeApp(firebaseConfig);
+const messaging = getMessaging(app);
+
+export { messaging, getToken, onMessage };
 
 // Instructions to get these values:
 // 1. Go to Firebase Console: https://console.firebase.google.com/

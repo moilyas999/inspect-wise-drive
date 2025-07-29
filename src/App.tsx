@@ -4,7 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useNotificationTriggers } from "@/hooks/useNotificationTriggers";
-import { firebaseMessagingService } from "@/services/firebaseMessaging";
+import { useFCM } from "@/hooks/useFCM";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import Auth from "./pages/Auth";
@@ -73,6 +73,8 @@ const RoleBasedHome = () => {
 };
 
 const NotificationManager = () => {
+  const { user } = useAuth();
+  
   // Enable notifications for all authenticated users
   useNotifications({
     enableBrowserNotifications: true,
@@ -82,10 +84,8 @@ const NotificationManager = () => {
   // Set up notification triggers for key events
   useNotificationTriggers();
   
-  // Initialize Firebase messaging
-  React.useEffect(() => {
-    firebaseMessagingService.initialize();
-  }, []);
+  // Initialize FCM for authenticated users
+  useFCM(user?.id);
   
   return null;
 };
