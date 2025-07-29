@@ -14,7 +14,203 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      inspection_faults: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          job_id: string
+          location: string | null
+          media_url: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          job_id: string
+          location?: string | null
+          media_url?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          job_id?: string
+          location?: string | null
+          media_url?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspection_faults_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inspection_jobs: {
+        Row: {
+          assigned_to: string
+          created_at: string
+          deadline: string | null
+          id: string
+          make: string
+          model: string
+          reg: string
+          seller_address: string | null
+          status: string
+          updated_at: string
+          vin: string | null
+        }
+        Insert: {
+          assigned_to: string
+          created_at?: string
+          deadline?: string | null
+          id?: string
+          make: string
+          model: string
+          reg: string
+          seller_address?: string | null
+          status?: string
+          updated_at?: string
+          vin?: string | null
+        }
+        Update: {
+          assigned_to?: string
+          created_at?: string
+          deadline?: string | null
+          id?: string
+          make?: string
+          model?: string
+          reg?: string
+          seller_address?: string | null
+          status?: string
+          updated_at?: string
+          vin?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspection_jobs_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "inspectors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inspection_media: {
+        Row: {
+          id: string
+          job_id: string
+          lat: number | null
+          lng: number | null
+          media_type: string
+          section: string
+          timestamp: string
+          url: string
+        }
+        Insert: {
+          id?: string
+          job_id: string
+          lat?: number | null
+          lng?: number | null
+          media_type?: string
+          section: string
+          timestamp?: string
+          url: string
+        }
+        Update: {
+          id?: string
+          job_id?: string
+          lat?: number | null
+          lng?: number | null
+          media_type?: string
+          section?: string
+          timestamp?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspection_media_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inspection_steps: {
+        Row: {
+          created_at: string
+          id: string
+          is_complete: boolean
+          job_id: string
+          notes: string | null
+          rating: number | null
+          section: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_complete?: boolean
+          job_id: string
+          notes?: string | null
+          rating?: number | null
+          section: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_complete?: boolean
+          job_id?: string
+          notes?: string | null
+          rating?: number | null
+          section?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspection_steps_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inspectors: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
