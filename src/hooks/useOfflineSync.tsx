@@ -108,8 +108,10 @@ export const useOfflineSync = () => {
     window.addEventListener('offline', handleOffline);
 
     return () => {
-      if (networkListener) {
-        networkListener.then((listener: any) => listener?.remove?.());
+      if (networkListener && typeof networkListener.then === 'function') {
+        networkListener.then((listener: any) => listener?.remove?.()).catch(() => {});
+      } else if (networkListener && typeof networkListener.remove === 'function') {
+        networkListener.remove();
       }
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
