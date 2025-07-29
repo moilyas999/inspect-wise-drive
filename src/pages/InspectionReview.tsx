@@ -6,8 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useCurrentInspector } from '@/hooks/useCurrentInspector';
-import NegotiationPanel from '@/components/NegotiationPanel';
 import { 
   ArrowLeft,
   CheckCircle2,
@@ -19,7 +17,8 @@ import {
   User,
   Flag,
   FileText,
-  Camera
+  Camera,
+  DollarSign
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -83,7 +82,6 @@ const InspectionReview = () => {
   const [loading, setLoading] = useState(true);
   const [reviewNotes, setReviewNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const { inspector } = useCurrentInspector();
 
   useEffect(() => {
     if (!jobId) return;
@@ -468,16 +466,49 @@ const InspectionReview = () => {
           </Card>
         )}
 
-        {/* Negotiation Panel */}
-        {job.business_id && (
-          <NegotiationPanel
-            jobId={job.id}
-            businessId={job.business_id}
-            isAdmin={true}
-            currentUserId={inspector?.id || ""}
-            negotiationStatus={job.negotiation_status || 'not_started'}
-            onNegotiationUpdate={fetchInspectionData}
-          />
+        {/* Price Negotiation */}
+        {job.status === 'submitted' && (
+          <Card className="shadow-card border-0 bg-card/80 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="w-5 h-5" />
+                Price Negotiation
+              </CardTitle>
+              <CardDescription>
+                Manage price negotiations with the inspector
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center space-y-4">
+                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <span>Status:</span>
+                  {job.negotiation_status === 'agreed' && (
+                    <Badge className="bg-success hover:bg-success/80">✅ Price Agreed</Badge>
+                  )}
+                  {job.negotiation_status === 'declined' && (
+                    <Badge variant="destructive">❌ Negotiation Ended</Badge>
+                  )}
+                  {job.negotiation_status === 'pending_admin' && (
+                    <Badge className="bg-warning hover:bg-warning/80">⏰ Your Turn to Respond</Badge>
+                  )}
+                  {job.negotiation_status === 'pending_user' && (
+                    <Badge variant="outline">Awaiting Inspector Response</Badge>
+                  )}
+                  {(!job.negotiation_status || job.negotiation_status === 'not_started') && (
+                    <Badge variant="secondary">Awaiting Initial Offer</Badge>
+                  )}
+                </div>
+                <Button
+                  onClick={() => navigate(`/admin/negotiation/${job.id}`)}
+                  className="gap-2"
+                  size="lg"
+                >
+                  <DollarSign className="w-4 h-4" />
+                  Manage Negotiation
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Review Actions */}

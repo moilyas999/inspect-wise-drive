@@ -24,7 +24,8 @@ import {
   Users,
   BarChart3,
   Filter,
-  XCircle
+  XCircle,
+  DollarSign
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -38,6 +39,7 @@ interface InspectionJob {
   deadline: string;
   status: 'not_started' | 'in_progress' | 'submitted';
   review_status: 'pending' | 'approved' | 'rejected';
+  negotiation_status?: string;
   created_at: string;
   vehicle_id?: string;
   assigned_inspector?: {
@@ -155,6 +157,21 @@ const AdminDashboard = () => {
         return <Badge variant="destructive" className="gap-1"><XCircle className="w-3 h-3" />Rejected</Badge>;
       default:
         return <Badge variant="outline" className="gap-1"><Clock className="w-3 h-3" />Pending Review</Badge>;
+    }
+  };
+
+  const getNegotiationBadge = (negotiationStatus: string) => {
+    switch (negotiationStatus) {
+      case 'agreed':
+        return <Badge className="bg-success hover:bg-success/80"><CheckCircle2 className="w-3 h-3 mr-1" />Price Agreed</Badge>;
+      case 'declined':
+        return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />Declined</Badge>;
+      case 'pending_admin':
+        return <Badge className="bg-warning hover:bg-warning/80"><Clock className="w-3 h-3 mr-1" />Your Turn</Badge>;
+      case 'pending_user':
+        return <Badge variant="outline"><Clock className="w-3 h-3 mr-1" />Awaiting User</Badge>;
+      default:
+        return null;
     }
   };
 
@@ -388,6 +405,7 @@ const AdminDashboard = () => {
                           <div className="flex flex-col gap-2 ml-2">
                             {getStatusBadge(job.status)}
                             {job.status === 'submitted' && getReviewBadge(job.review_status)}
+                            {job.status === 'submitted' && job.negotiation_status && getNegotiationBadge(job.negotiation_status)}
                           </div>
                         </div>
                       </CardHeader>
@@ -413,6 +431,17 @@ const AdminDashboard = () => {
                             <Eye className="w-4 h-4" />
                             Review
                           </Button>
+                          {job.status === 'submitted' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="gap-2 h-10 rounded-xl flex-1"
+                              onClick={() => navigate(`/admin/negotiation/${job.id}`)}
+                            >
+                              <DollarSign className="w-4 h-4" />
+                              Negotiate
+                            </Button>
+                          )}
                           {job.vehicle_id && (
                             <Button
                               variant="outline"

@@ -16,7 +16,8 @@ import {
   RefreshCw,
   Plus,
   Calendar,
-  Users
+  Users,
+  DollarSign
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -33,6 +34,7 @@ interface InspectionJob {
   business_id: string;
   assigned_to: string;
   review_status: string | null;
+  negotiation_status?: string | null;
   reviewed_at: string | null;
   reviewed_by: string | null;
   updated_at: string;
@@ -331,8 +333,20 @@ const Dashboard = () => {
                           className="gap-2 h-10 rounded-xl flex-1"
                         >
                           <PlayCircle className="w-4 h-4" />
-                          View Details
+                          {job.status === 'submitted' ? 'View Report' : 'Continue Inspection'}
                         </Button>
+                        {job.status === 'submitted' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.location.href = `/negotiation/${job.id}`}
+                            className="gap-2 h-10 rounded-xl flex-1"
+                          >
+                            <DollarSign className="w-4 h-4" />
+                            {job.negotiation_status === 'agreed' ? 'View Agreement' :
+                             job.negotiation_status === 'pending_user' ? 'Respond' : 'Negotiate Price'}
+                          </Button>
+                        )}
                       </div>
                     </CardContent>
                   </Card>

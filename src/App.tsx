@@ -11,6 +11,8 @@ import StaffManagement from "./pages/StaffManagement";
 import InspectionReview from "./pages/InspectionReview";
 import VehicleProfile from "./pages/VehicleProfile";
 import Inspection from "./pages/Inspection";
+import UserNegotiation from "./pages/UserNegotiation";
+import AdminNegotiation from "./pages/AdminNegotiation";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -97,6 +99,16 @@ const AppRoutes = () => (
     <Route path="/inspection/:jobId" element={
       <ProtectedRoute requiredRole="staff">
         <Inspection />
+      </ProtectedRoute>
+    } />
+    <Route path="/negotiation/:jobId" element={
+      <ProtectedRoute requiredRole="staff">
+        <UserNegotiation />
+      </ProtectedRoute>
+    } />
+    <Route path="/admin/negotiation/:jobId" element={
+      <ProtectedRoute requiredRole="admin">
+        <AdminNegotiation />
       </ProtectedRoute>
     } />
     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

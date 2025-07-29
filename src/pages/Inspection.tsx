@@ -10,9 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import MediaUpload from "@/components/MediaUpload";
-import { Loader2, CheckCircle, AlertCircle, Camera, FileText, ArrowLeft, Star } from "lucide-react";
-import NegotiationPanel from "@/components/NegotiationPanel";
-import { useCurrentInspector } from "@/hooks/useCurrentInspector";
+import { Loader2, CheckCircle, AlertCircle, Camera, FileText, ArrowLeft, Star, DollarSign } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 interface InspectionJob {
@@ -79,7 +77,6 @@ const Inspection = () => {
   const [faults, setFaults] = useState<InspectionFault[]>([]);
   const [activeSection, setActiveSection] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
-  const { inspector } = useCurrentInspector();
 
   const [newFault, setNewFault] = useState({
     type: "",
@@ -638,18 +635,25 @@ const Inspection = () => {
             </TabsContent>
           </Tabs>
 
-          {/* Negotiation Panel - Show when inspection is submitted */}
-          {job.status === 'submitted' && job.business_id && (
-            <div className="mt-6">
-              <NegotiationPanel
-                jobId={job.id}
-                businessId={job.business_id}
-                isAdmin={false}
-                currentUserId={inspector?.id || ""}
-                negotiationStatus={job.negotiation_status || 'not_started'}
-                onNegotiationUpdate={fetchInspectionData}
-              />
-            </div>
+          {/* Negotiation Navigation - Show when inspection is submitted */}
+          {job.status === 'submitted' && (
+            <Card className="mt-6 shadow-card border-0 bg-card/80 backdrop-blur-sm">
+              <CardContent className="p-6 text-center">
+                <DollarSign className="w-12 h-12 text-success mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Inspection Complete!</h3>
+                <p className="text-muted-foreground mb-4">
+                  Your inspection has been submitted successfully. You can now negotiate the final price.
+                </p>
+                <Button
+                  onClick={() => navigate(`/negotiation/${job.id}`)}
+                  className="gap-2"
+                  size="lg"
+                >
+                  <DollarSign className="w-4 h-4" />
+                  Start Price Negotiation
+                </Button>
+              </CardContent>
+            </Card>
           )}
 
           {/* Submit Button */}
