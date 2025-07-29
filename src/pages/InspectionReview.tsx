@@ -370,9 +370,17 @@ const InspectionReview = () => {
                                 </p>
                               )}
                               {item.photo_url && (
-                                <div className="mt-2 flex items-center gap-1 text-xs text-primary">
-                                  <Camera className="w-3 h-3" />
-                                  Photo attached
+                                <div className="mt-2">
+                                  <div className="flex items-center gap-1 text-xs text-primary mb-1">
+                                    <Camera className="w-3 h-3" />
+                                    Photo:
+                                  </div>
+                                  <img 
+                                    src={item.photo_url} 
+                                    alt={`${item.item_name} inspection photo`}
+                                    className="w-full max-w-xs rounded-lg border shadow-sm cursor-pointer hover:opacity-80 transition-opacity"
+                                    onClick={() => window.open(item.photo_url, '_blank')}
+                                  />
                                 </div>
                               )}
                             </div>
@@ -424,9 +432,17 @@ const InspectionReview = () => {
                         </div>
                         <p className="text-sm font-medium">{fault.description}</p>
                         {fault.media_url && (
-                          <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
-                            <Camera className="w-3 h-3" />
-                            Photo evidence available
+                          <div className="mt-2">
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1">
+                              <Camera className="w-3 h-3" />
+                              Photo evidence:
+                            </div>
+                            <img 
+                              src={fault.media_url} 
+                              alt={`${fault.type} fault photo`}
+                              className="w-full max-w-xs rounded-lg border shadow-sm cursor-pointer hover:opacity-80 transition-opacity"
+                              onClick={() => window.open(fault.media_url, '_blank')}
+                            />
                           </div>
                         )}
                       </div>
