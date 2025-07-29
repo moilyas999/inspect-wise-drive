@@ -1,0 +1,195 @@
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from './useAuth';
+
+interface NotificationConfig {
+  enableBrowserNotifications?: boolean;
+  enableToastNotifications?: boolean;
+}
+
+export const useNotifications = (config: NotificationConfig = {}) => {
+  const { enableBrowserNotifications = true, enableToastNotifications = true } = config;
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const { toast } = useToast();
+  const { user, userRole } = useAuth();
+
+  useEffect(() => {
+    if (!user) return;
+
+    // Request notification permission
+    if (enableBrowserNotifications && 'Notification' in window) {
+      if (Notification.permission === 'default') {
+        Notification.requestPermission().then(permission => {
+          setIsSubscribed(permission === 'granted');
+        });
+      } else {
+        setIsSubscribed(Notification.permission === 'granted');
+      }
+    }
+
+    // Set up realtime subscriptions
+    const channels: any[] = [];
+
+    if (userRole === 'admin') {
+      // Admin notifications: new inspections, completed inspections, new offers
+      const adminChannel = supabase
+        .channel('admin-notifications')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'inspection_jobs',
+            filter: `status=in.(in_progress,submitted)`
+          },
+          (payload) => {
+            console.log('Admin notification - job change:', payload);
+            
+            if (payload.eventType === 'UPDATE') {
+              const oldRecord = payload.old;
+              const newRecord = payload.new;
+              
+              // New inspection started
+              if (oldRecord.status === 'not_started' && newRecord.status === 'in_progress') {
+                showNotification(
+                  'New Inspection Started',
+                  `Inspector started inspection for ${newRecord.make} ${newRecord.model} (${newRecord.reg})`,
+                  'inspection'
+                );
+              }
+              
+              // Inspection completed
+              if (oldRecord.status === 'in_progress' && newRecord.status === 'submitted') {
+                showNotification(
+                  'Inspection Completed',
+                  `Inspection completed for ${newRecord.make} ${newRecord.model} (${newRecord.reg})`,
+                  'completion'
+                );
+              }
+            }
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'negotiation_offers'
+          },
+          (payload) => {
+            console.log('Admin notification - new offer:', payload);
+            
+            if (payload.new.offered_by === 'inspector') {
+              showNotification(
+                'New Price Offer',
+                `Inspector submitted offer: £${payload.new.amount.toLocaleString()}`,
+                'offer'
+              );
+            }
+          }
+        )
+        .subscribe();
+
+      channels.push(adminChannel);
+    } else if (userRole === 'staff') {
+      // Staff notifications: negotiation updates
+      const staffChannel = supabase
+        .channel('staff-notifications')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'negotiation_offers'
+          },
+          (payload) => {
+            console.log('Staff notification - offer change:', payload);
+            
+            if (payload.eventType === 'INSERT' && payload.new.offered_by === 'admin') {
+              showNotification(
+                'Admin Response',
+                `Admin responded with: £${payload.new.amount.toLocaleString()}`,
+                'response'
+              );
+            }
+            
+            if (payload.eventType === 'UPDATE' && payload.new.status === 'accepted') {
+              showNotification(
+                'Offer Accepted!',
+                `Your offer of £${payload.new.amount.toLocaleString()} was accepted!`,
+                'success'
+              );
+            }
+            
+            if (payload.eventType === 'UPDATE' && payload.new.status === 'declined') {
+              showNotification(
+                'Offer Declined',
+                `Your offer of £${payload.new.amount.toLocaleString()} was declined`,
+                'declined'
+              );
+            }
+          }
+        )
+        .subscribe();
+
+      channels.push(staffChannel);
+    }
+
+    return () => {
+      channels.forEach(channel => {
+        supabase.removeChannel(channel);
+      });
+    };
+  }, [user, userRole, enableBrowserNotifications, enableToastNotifications]);
+
+  const showNotification = (title: string, body: string, type: string) => {
+    // Show toast notification
+    if (enableToastNotifications) {
+      const toastVariant = type === 'success' ? 'default' : 
+                          type === 'declined' ? 'destructive' : 'default';
+      
+      toast({
+        title,
+        description: body,
+        variant: toastVariant,
+        duration: 6000,
+      });
+    }
+
+    // Show browser notification
+    if (enableBrowserNotifications && isSubscribed && 'Notification' in window) {
+      try {
+        const notification = new Notification(title, {
+          body,
+          icon: '/favicon.ico',
+          tag: type,
+          requireInteraction: type === 'offer' || type === 'response',
+        });
+
+        // Auto-close after 10 seconds unless it requires interaction
+        if (!notification.requireInteraction) {
+          setTimeout(() => notification.close(), 10000);
+        }
+
+        notification.onclick = () => {
+          window.focus();
+          notification.close();
+          
+          // Navigate based on notification type
+          if (type === 'offer' || type === 'response') {
+            // Could add navigation logic here
+            console.log('Navigate to negotiation page');
+          }
+        };
+      } catch (error) {
+        console.error('Error showing notification:', error);
+      }
+    }
+  };
+
+  return {
+    isSubscribed,
+    showNotification
+  };
+};

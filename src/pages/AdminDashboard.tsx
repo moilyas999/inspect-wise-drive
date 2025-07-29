@@ -12,6 +12,7 @@ import { useBusinessData } from '@/hooks/useBusinessData';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import StaffManagement from './StaffManagement';
+import { useNotifications } from '@/hooks/useNotifications';
 import { 
   Car, 
   Clock, 

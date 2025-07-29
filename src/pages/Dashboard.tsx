@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useBusinessData, Inspector } from '@/hooks/useBusinessData';
 import { supabase } from '@/integrations/supabase/client';
 import CreateInspectionJobModal from '@/components/CreateInspectionJobModal';
+import { useNotifications } from '@/hooks/useNotifications';
 import { 
   Car,
   Clock, 
@@ -50,6 +51,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [inspectors, setInspectors] = useState<Inspector[]>([]);
   const { businessId, business, getStaffMembers } = useBusinessData();
+  const { isSubscribed } = useNotifications();
   const { toast } = useToast();
 
   useEffect(() => {

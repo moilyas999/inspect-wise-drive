@@ -139,39 +139,40 @@ const AdminNegotiation = () => {
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
       {/* Header */}
       <div className="border-b bg-card/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
+        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate('/admin')}
+              className="h-8 w-8 sm:h-10 sm:w-10"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
-            <div className="flex-1">
-              <h1 className="text-lg font-bold text-foreground">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-sm sm:text-lg font-bold text-foreground truncate">
                 Admin Negotiation: {job.make} {job.model}
               </h1>
-              <p className="text-sm text-muted-foreground font-mono">{job.reg}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground font-mono">{job.reg}</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-2">
               {getStatusBadge(job.negotiation_status)}
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="gap-1"
+                className="gap-1 h-8 px-2 sm:h-10 sm:px-3 text-xs sm:text-sm"
               >
                 <RefreshCw className={`w-3 h-3 ${refreshing ? 'animate-spin' : ''}`} />
-                Refresh
+                <span className="hidden sm:inline">Refresh</span>
               </Button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6 space-y-6">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* Vehicle Info */}
         <Card className="shadow-card border-0 bg-card/80 backdrop-blur-sm">
           <CardHeader>
