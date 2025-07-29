@@ -90,8 +90,8 @@ const Auth = () => {
               <Building2 className="w-10 h-10 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground mb-2">VehicleWise</h1>
-              <p className="text-sm text-muted-foreground leading-relaxed">Professional Vehicle Inspection Platform</p>
+              <h1 className="text-2xl font-bold text-foreground mb-2">Status Motor Group</h1>
+              <p className="text-sm text-muted-foreground leading-relaxed">Collections Management App</p>
             </div>
           </div>
 

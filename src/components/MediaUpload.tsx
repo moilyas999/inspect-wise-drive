@@ -263,7 +263,7 @@ export default function MediaUpload({
             ref={cameraInputRef}
             type="file"
             accept={mediaType === 'photo' ? 'image/*' : 'video/*'}
-            capture={mediaType === 'photo' ? 'environment' : 'user'}
+            capture="environment"
             onChange={handleFileSelect}
             className="hidden"
           />

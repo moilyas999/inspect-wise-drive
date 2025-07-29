@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './useAuth';
+import { pushNotificationService } from '@/services/pushNotifications';
 
 interface NotificationConfig {
   enableBrowserNotifications?: boolean;
@@ -17,16 +18,24 @@ export const useNotifications = (config: NotificationConfig = {}) => {
   useEffect(() => {
     if (!user) return;
 
-    // Request notification permission
-    if (enableBrowserNotifications && 'Notification' in window) {
-      if (Notification.permission === 'default') {
-        Notification.requestPermission().then(permission => {
-          setIsSubscribed(permission === 'granted');
-        });
-      } else {
-        setIsSubscribed(Notification.permission === 'granted');
+    // Initialize push notifications
+    const initNotifications = async () => {
+      const isInitialized = await pushNotificationService.initialize();
+      setIsSubscribed(isInitialized);
+      
+      // Fallback to web notifications if push notifications are not available
+      if (!isInitialized && enableBrowserNotifications && 'Notification' in window) {
+        if (Notification.permission === 'default') {
+          Notification.requestPermission().then(permission => {
+            setIsSubscribed(permission === 'granted');
+          });
+        } else {
+          setIsSubscribed(Notification.permission === 'granted');
+        }
       }
-    }
+    };
+
+    initNotifications();
 
     // Set up realtime subscriptions
     const channels: any[] = [];
@@ -143,7 +152,7 @@ export const useNotifications = (config: NotificationConfig = {}) => {
     };
   }, [user, userRole, enableBrowserNotifications, enableToastNotifications]);
 
-  const showNotification = (title: string, body: string, type: string) => {
+  const showNotification = async (title: string, body: string, type: string) => {
     // Show toast notification
     if (enableToastNotifications) {
       const toastVariant = type === 'success' ? 'default' : 
@@ -157,31 +166,16 @@ export const useNotifications = (config: NotificationConfig = {}) => {
       });
     }
 
-    // Show browser notification
-    if (enableBrowserNotifications && isSubscribed && 'Notification' in window) {
+    // Show push notification (native or web fallback)
+    if (enableBrowserNotifications && isSubscribed) {
       try {
-        const notification = new Notification(title, {
+        const route = type === 'offer' || type === 'response' ? '/negotiation' : null;
+        
+        await pushNotificationService.sendNotification({
+          title,
           body,
-          icon: '/favicon.ico',
-          tag: type,
-          requireInteraction: type === 'offer' || type === 'response',
+          data: { type, route }
         });
-
-        // Auto-close after 10 seconds unless it requires interaction
-        if (!notification.requireInteraction) {
-          setTimeout(() => notification.close(), 10000);
-        }
-
-        notification.onclick = () => {
-          window.focus();
-          notification.close();
-          
-          // Navigate based on notification type
-          if (type === 'offer' || type === 'response') {
-            // Could add navigation logic here
-            console.log('Navigate to negotiation page');
-          }
-        };
       } catch (error) {
         console.error('Error showing notification:', error);
       }
