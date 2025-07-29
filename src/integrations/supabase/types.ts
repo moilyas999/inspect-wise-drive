@@ -166,11 +166,13 @@ export type Database = {
           color: string | null
           created_at: string
           deadline: string | null
+          final_agreed_price: number | null
           fuel_type: string | null
           id: string
           make: string
           mileage: number | null
           model: string
+          negotiation_status: string | null
           notes: string | null
           priority: string | null
           purchase_date: string | null
@@ -193,11 +195,13 @@ export type Database = {
           color?: string | null
           created_at?: string
           deadline?: string | null
+          final_agreed_price?: number | null
           fuel_type?: string | null
           id?: string
           make: string
           mileage?: number | null
           model: string
+          negotiation_status?: string | null
           notes?: string | null
           priority?: string | null
           purchase_date?: string | null
@@ -220,11 +224,13 @@ export type Database = {
           color?: string | null
           created_at?: string
           deadline?: string | null
+          final_agreed_price?: number | null
           fuel_type?: string | null
           id?: string
           make?: string
           mileage?: number | null
           model?: string
+          negotiation_status?: string | null
           notes?: string | null
           priority?: string | null
           purchase_date?: string | null
@@ -509,6 +515,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      negotiation_offers: {
+        Row: {
+          amount: number
+          business_id: string
+          created_at: string
+          id: string
+          job_id: string
+          notes: string | null
+          offer_type: string
+          offered_by: string
+          offered_by_user_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          business_id: string
+          created_at?: string
+          id?: string
+          job_id: string
+          notes?: string | null
+          offer_type: string
+          offered_by: string
+          offered_by_user_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          business_id?: string
+          created_at?: string
+          id?: string
+          job_id?: string
+          notes?: string | null
+          offer_type?: string
+          offered_by?: string
+          offered_by_user_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       prep_progress: {
         Row: {

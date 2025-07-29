@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useCurrentInspector } from '@/hooks/useCurrentInspector';
+import NegotiationPanel from '@/components/NegotiationPanel';
 import { 
   ArrowLeft,
   CheckCircle2,
@@ -31,6 +33,8 @@ interface InspectionJob {
   deadline: string;
   status: string;
   review_status: string;
+  negotiation_status?: string;
+  business_id?: string;
   assigned_inspector?: {
     name: string;
     email: string;
@@ -79,6 +83,7 @@ const InspectionReview = () => {
   const [loading, setLoading] = useState(true);
   const [reviewNotes, setReviewNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const { inspector } = useCurrentInspector();
 
   useEffect(() => {
     if (!jobId) return;
@@ -461,6 +466,18 @@ const InspectionReview = () => {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Negotiation Panel */}
+        {job.business_id && (
+          <NegotiationPanel
+            jobId={job.id}
+            businessId={job.business_id}
+            isAdmin={true}
+            currentUserId={inspector?.id || ""}
+            negotiationStatus={job.negotiation_status || 'not_started'}
+            onNegotiationUpdate={fetchInspectionData}
+          />
         )}
 
         {/* Review Actions */}

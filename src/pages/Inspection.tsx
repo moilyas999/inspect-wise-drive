@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import MediaUpload from "@/components/MediaUpload";
 import { Loader2, CheckCircle, AlertCircle, Camera, FileText, ArrowLeft, Star } from "lucide-react";
+import NegotiationPanel from "@/components/NegotiationPanel";
+import { useCurrentInspector } from "@/hooks/useCurrentInspector";
 import { Progress } from "@/components/ui/progress";
 
 interface InspectionJob {
@@ -31,6 +33,7 @@ interface InspectionJob {
   seller_address?: string;
   notes?: string;
   business_id?: string;
+  negotiation_status?: string;
 }
 
 interface InspectionSection {
@@ -76,6 +79,7 @@ const Inspection = () => {
   const [faults, setFaults] = useState<InspectionFault[]>([]);
   const [activeSection, setActiveSection] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
+  const { inspector } = useCurrentInspector();
 
   const [newFault, setNewFault] = useState({
     type: "",
@@ -634,8 +638,22 @@ const Inspection = () => {
             </TabsContent>
           </Tabs>
 
+          {/* Negotiation Panel - Show when inspection is submitted */}
+          {job.status === 'submitted' && job.business_id && (
+            <div className="mt-6">
+              <NegotiationPanel
+                jobId={job.id}
+                businessId={job.business_id}
+                isAdmin={false}
+                currentUserId={inspector?.id || ""}
+                negotiationStatus={job.negotiation_status || 'not_started'}
+                onNegotiationUpdate={fetchInspectionData}
+              />
+            </div>
+          )}
+
           {/* Submit Button */}
-          {getProgressPercentage() === 100 && (
+          {getProgressPercentage() === 100 && job.status !== 'submitted' && (
             <Card className="mt-6">
               <CardContent className="pt-6">
                 <Button 
