@@ -59,6 +59,8 @@ const AdminDashboard = () => {
 
   const fetchJobs = async () => {
     try {
+      setLoading(true);
+      
       const { data, error } = await supabase
         .from('inspection_jobs')
         .select(`
@@ -70,21 +72,35 @@ const AdminDashboard = () => {
         `)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching jobs:', error);
+        throw error;
+      }
       
       const transformedJobs = (data || []).map(job => ({
         ...job,
-        inspector: job.assigned_inspector
+        assigned_inspector: job.assigned_inspector
       })) as InspectionJob[];
       
       setJobs(transformedJobs);
       setFilteredJobs(transformedJobs);
-    } catch (error) {
+      
+      // Show success message if no jobs
+      if (transformedJobs.length === 0) {
+        toast({
+          title: "No Inspection Jobs",
+          description: "No inspection jobs found. Create your first job to get started.",
+        });
+      }
+    } catch (error: any) {
+      console.error('Error in fetchJobs:', error);
       toast({
-        title: "Error",
-        description: "Failed to load inspection jobs",
+        title: "Error Loading Data",
+        description: error.message || "Failed to load inspection jobs. Please refresh the page.",
         variant: "destructive",
       });
+      setJobs([]);
+      setFilteredJobs([]);
     } finally {
       setLoading(false);
     }
