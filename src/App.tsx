@@ -7,7 +7,9 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import StaffManagement from "./pages/StaffManagement";
 import InspectionReview from "./pages/InspectionReview";
+import VehicleProfile from "./pages/VehicleProfile";
 import Inspection from "./pages/Inspection";
 import NotFound from "./pages/NotFound";
 
@@ -75,6 +77,21 @@ const AppRoutes = () => (
     <Route path="/dashboard" element={
       <ProtectedRoute requiredRole="staff">
         <Dashboard />
+      </ProtectedRoute>
+    } />
+    <Route path="/admin/staff" element={
+      <ProtectedRoute requiredRole="admin">
+        <StaffManagement />
+      </ProtectedRoute>
+    } />
+    <Route path="/admin/inspection/:jobId" element={
+      <ProtectedRoute requiredRole="admin">
+        <InspectionReview />
+      </ProtectedRoute>
+    } />
+    <Route path="/admin/vehicle/:vehicleId" element={
+      <ProtectedRoute requiredRole="admin">
+        <VehicleProfile />
       </ProtectedRoute>
     } />
     <Route path="/inspection/:jobId" element={

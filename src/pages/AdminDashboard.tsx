@@ -38,6 +38,7 @@ interface InspectionJob {
   status: 'not_started' | 'in_progress' | 'submitted';
   review_status: 'pending' | 'approved' | 'rejected';
   created_at: string;
+  vehicle_id?: string;
   assigned_inspector?: {
     name: string;
     email: string;
@@ -393,8 +394,19 @@ const AdminDashboard = () => {
                             onClick={() => navigate(`/admin/inspection/${job.id}`)}
                           >
                             <Eye className="w-4 h-4" />
-                            View Inspection
+                            Review Inspection
                           </Button>
+                          {job.vehicle_id && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="gap-2"
+                              onClick={() => navigate(`/admin/vehicle/${job.vehicle_id}`)}
+                            >
+                              <Car className="w-4 h-4" />
+                              Vehicle Profile
+                            </Button>
+                          )}
                         </div>
                       </CardContent>
                     </Card>

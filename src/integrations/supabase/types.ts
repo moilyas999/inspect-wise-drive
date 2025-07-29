@@ -46,6 +46,7 @@ export type Database = {
           location: string | null
           media_url: string | null
           type: string
+          vehicle_id: string | null
         }
         Insert: {
           business_id?: string | null
@@ -57,6 +58,7 @@ export type Database = {
           location?: string | null
           media_url?: string | null
           type: string
+          vehicle_id?: string | null
         }
         Update: {
           business_id?: string | null
@@ -68,6 +70,7 @@ export type Database = {
           location?: string | null
           media_url?: string | null
           type?: string
+          vehicle_id?: string | null
         }
         Relationships: [
           {
@@ -82,6 +85,13 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "inspection_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inspection_faults_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
             referencedColumns: ["id"]
           },
         ]
@@ -102,6 +112,7 @@ export type Database = {
           seller_address: string | null
           status: string
           updated_at: string
+          vehicle_id: string | null
           vin: string | null
         }
         Insert: {
@@ -119,6 +130,7 @@ export type Database = {
           seller_address?: string | null
           status?: string
           updated_at?: string
+          vehicle_id?: string | null
           vin?: string | null
         }
         Update: {
@@ -136,6 +148,7 @@ export type Database = {
           seller_address?: string | null
           status?: string
           updated_at?: string
+          vehicle_id?: string | null
           vin?: string | null
         }
         Relationships: [
@@ -160,11 +173,20 @@ export type Database = {
             referencedRelation: "inspectors"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "inspection_jobs_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       inspection_media: {
         Row: {
           business_id: string | null
+          duration: number | null
+          file_size: number | null
           id: string
           job_id: string
           lat: number | null
@@ -173,9 +195,12 @@ export type Database = {
           section: string
           timestamp: string
           url: string
+          vehicle_id: string | null
         }
         Insert: {
           business_id?: string | null
+          duration?: number | null
+          file_size?: number | null
           id?: string
           job_id: string
           lat?: number | null
@@ -184,9 +209,12 @@ export type Database = {
           section: string
           timestamp?: string
           url: string
+          vehicle_id?: string | null
         }
         Update: {
           business_id?: string | null
+          duration?: number | null
+          file_size?: number | null
           id?: string
           job_id?: string
           lat?: number | null
@@ -195,6 +223,7 @@ export type Database = {
           section?: string
           timestamp?: string
           url?: string
+          vehicle_id?: string | null
         }
         Relationships: [
           {
@@ -211,6 +240,13 @@ export type Database = {
             referencedRelation: "inspection_jobs"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "inspection_media_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       inspection_steps: {
@@ -224,6 +260,7 @@ export type Database = {
           rating: number | null
           section: string
           updated_at: string
+          vehicle_id: string | null
         }
         Insert: {
           business_id?: string | null
@@ -235,6 +272,7 @@ export type Database = {
           rating?: number | null
           section: string
           updated_at?: string
+          vehicle_id?: string | null
         }
         Update: {
           business_id?: string | null
@@ -246,6 +284,7 @@ export type Database = {
           rating?: number | null
           section?: string
           updated_at?: string
+          vehicle_id?: string | null
         }
         Relationships: [
           {
@@ -260,6 +299,13 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "inspection_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inspection_steps_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
             referencedColumns: ["id"]
           },
         ]
@@ -308,6 +354,79 @@ export type Database = {
           },
         ]
       }
+      prep_progress: {
+        Row: {
+          business_id: string
+          completed_at: string | null
+          created_at: string
+          fault_id: string
+          id: string
+          notes: string | null
+          parts_used: string | null
+          repair_photo_url: string | null
+          repair_video_url: string | null
+          repaired_by: string | null
+          status: string
+          time_taken: number | null
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          business_id: string
+          completed_at?: string | null
+          created_at?: string
+          fault_id: string
+          id?: string
+          notes?: string | null
+          parts_used?: string | null
+          repair_photo_url?: string | null
+          repair_video_url?: string | null
+          repaired_by?: string | null
+          status?: string
+          time_taken?: number | null
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          business_id?: string
+          completed_at?: string | null
+          created_at?: string
+          fault_id?: string
+          id?: string
+          notes?: string | null
+          parts_used?: string | null
+          repair_photo_url?: string | null
+          repair_video_url?: string | null
+          repaired_by?: string | null
+          status?: string
+          time_taken?: number | null
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prep_progress_fault_id_fkey"
+            columns: ["fault_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_faults"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prep_progress_repaired_by_fkey"
+            columns: ["repaired_by"]
+            isOneToOne: false
+            referencedRelation: "inspectors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prep_progress_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -326,6 +445,45 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      vehicles: {
+        Row: {
+          business_id: string
+          created_at: string
+          current_stage: string
+          id: string
+          make: string
+          model: string
+          reg: string
+          status: string
+          updated_at: string
+          vin: string | null
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          current_stage?: string
+          id?: string
+          make: string
+          model: string
+          reg: string
+          status?: string
+          updated_at?: string
+          vin?: string | null
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          current_stage?: string
+          id?: string
+          make?: string
+          model?: string
+          reg?: string
+          status?: string
+          updated_at?: string
+          vin?: string | null
         }
         Relationships: []
       }
