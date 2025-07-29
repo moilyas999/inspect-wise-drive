@@ -17,9 +17,9 @@ import {
   User,
   Flag,
   FileText,
-  Camera,
   DollarSign
 } from 'lucide-react';
+import { Camera } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface InspectionJob {
