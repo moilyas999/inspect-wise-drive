@@ -11,6 +11,7 @@ export interface NotificationPayload {
 class PushNotificationService {
   private isInitialized = false;
   private registrationToken: string | null = null;
+  private platform: 'capacitor' | 'web' = 'web';
 
   async initialize(): Promise<boolean> {
     if (this.isInitialized) return true;
@@ -21,9 +22,11 @@ class PushNotificationService {
       // Check if we're on a native platform
       if (Capacitor.isNativePlatform()) {
         console.log('Native platform detected, setting up Capacitor push notifications');
+        this.platform = 'capacitor';
         await this.initializeCapacitorPush();
       } else {
         console.log('Web platform detected, setting up web notifications');
+        this.platform = 'web';
         await this.initializeWebNotifications();
       }
 
@@ -201,21 +204,63 @@ class PushNotificationService {
     }
   }
 
-  async sendNotification(payload: NotificationPayload) {
-    if (Capacitor.isNativePlatform()) {
-      // For native platforms, we rely on the server to send push notifications
-      // This method is called to show local notifications or trigger server notifications
-      console.log('Native notification requested:', payload);
-      
-      // Show local notification if app is in foreground
-      this.handleForegroundNotification({
-        title: payload.title,
-        body: payload.body,
-        data: payload.data
-      });
+  async sendNotification(payload: NotificationPayload): Promise<void> {
+    console.log('🔔 PushNotificationService: sendNotification called with:', payload);
+    
+    if (this.platform === 'capacitor') {
+      // For native platforms, send via FCM server
+      console.log('🔔 PushNotificationService: Native platform - sending via FCM server');
+      await this.sendViaFCM(payload);
     } else {
-      // For web, show browser notification
+      // For web platforms, show browser notification
+      console.log('🔔 PushNotificationService: Web platform - showing browser notification');
       await this.showWebNotification(payload);
+    }
+  }
+
+  private async sendViaFCM(payload: NotificationPayload): Promise<void> {
+    try {
+      console.log('🔔 PushNotificationService: Calling FCM edge function');
+      
+      const { data, error } = await supabase.functions.invoke('send-fcm-notification', {
+        body: {
+          title: payload.title,
+          body: payload.body,
+          data: payload.data || {},
+          tokens: this.registrationToken ? [this.registrationToken] : undefined
+        }
+      });
+
+      if (error) {
+        console.error('🔔 PushNotificationService: FCM error:', error);
+        throw error;
+      }
+
+      console.log('🔔 PushNotificationService: FCM response:', data);
+    } catch (error) {
+      console.error('🔔 PushNotificationService: Failed to send FCM notification:', error);
+      // Fallback to local notification
+      await this.showLocalNotification(payload);
+    }
+  }
+
+  private async showLocalNotification(payload: NotificationPayload): Promise<void> {
+    try {
+      const { LocalNotifications } = await import('@capacitor/local-notifications');
+      
+      await LocalNotifications.schedule({
+        notifications: [{
+          title: payload.title,
+          body: payload.body,
+          id: Date.now(),
+          schedule: { at: new Date(Date.now() + 1000) }, // Show in 1 second
+          extra: payload.data
+        }]
+      });
+      
+      console.log('🔔 PushNotificationService: Local notification scheduled');
+    } catch (error) {
+      console.error('🔔 PushNotificationService: Failed to show local notification:', error);
     }
   }
 
