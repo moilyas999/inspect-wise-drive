@@ -23,16 +23,27 @@ const StaffManagementModal = ({ onStaffCreated, children }: StaffManagementModal
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!name.trim() || !email.trim()) {
+    // Comprehensive validation
+    if (!name.trim()) {
       toast({
         title: "Validation Error",
-        description: "Please fill in all fields",
+        description: "Staff member name is required",
         variant: "destructive",
       });
       return;
     }
 
-    if (!email.includes('@')) {
+    if (!email.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Email address is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
       toast({
         title: "Validation Error", 
         description: "Please enter a valid email address",
@@ -44,12 +55,16 @@ const StaffManagementModal = ({ onStaffCreated, children }: StaffManagementModal
     setLoading(true);
 
     try {
+      console.log('Starting staff creation for:', { name: name.trim(), email: email.trim() });
+      
       const result = await createStaffMember(name.trim(), email.trim());
+      
+      console.log('Staff creation result:', result);
       
       if (result.success) {
         toast({
-          title: "Staff Member Added",
-          description: `${name} has been added successfully. They will receive an email to set their password.`,
+          title: "✅ Staff Member Added Successfully",
+          description: `${name} has been added to your team. They will receive an email to set up their password.`,
         });
         
         // Reset form
@@ -58,30 +73,53 @@ const StaffManagementModal = ({ onStaffCreated, children }: StaffManagementModal
         setOpen(false);
         onStaffCreated();
       } else {
-        // Handle specific error cases
+        // Handle specific error cases with detailed feedback
         let errorMessage = 'Failed to create staff member';
+        let errorTitle = 'Staff Creation Failed';
         
-        if (result.error?.message?.includes('User already registered')) {
-          errorMessage = 'A user with this email already exists. Please use a different email address.';
-        } else if (result.error?.message?.includes('Invalid email')) {
-          errorMessage = 'Please enter a valid email address.';
-        } else if (result.error?.message?.includes('Database error')) {
-          errorMessage = 'Database error occurred. Please try again or contact support.';
-        } else if (result.error?.message) {
-          errorMessage = result.error.message;
+        const errorMsg = result.error?.message || '';
+        
+        if (errorMsg.includes('User already registered') || errorMsg.includes('already exists')) {
+          errorTitle = 'User Already Exists';
+          errorMessage = `A user with email "${email}" already exists. Please use a different email address or check if this person is already in your team.`;
+        } else if (errorMsg.includes('Invalid email')) {
+          errorTitle = 'Invalid Email';
+          errorMessage = 'The email address format is invalid. Please check and try again.';
+        } else if (errorMsg.includes('Database error') || errorMsg.includes('trigger')) {
+          errorTitle = 'Database Error';
+          errorMessage = 'There was an issue with the database. Please try again in a moment or contact support if the problem persists.';
+        } else if (errorMsg.includes('Unauthorized')) {
+          errorTitle = 'Permission Denied';
+          errorMessage = 'You do not have permission to add staff members. Please ensure you are logged in as an admin.';
+        } else if (errorMsg.includes('network') || errorMsg.includes('connection')) {
+          errorTitle = 'Connection Error';
+          errorMessage = 'Unable to connect to the server. Please check your internet connection and try again.';
+        } else if (errorMsg) {
+          errorMessage = errorMsg;
         }
         
+        console.error('Staff creation failed:', { errorTitle, errorMessage, originalError: result.error });
+        
         toast({
-          title: "Error Adding Staff Member",
+          title: errorTitle,
           description: errorMessage,
           variant: "destructive",
         });
       }
     } catch (error: any) {
-      console.error('Error creating staff member:', error);
+      console.error('Unexpected error in staff creation:', error);
+      
+      let errorMessage = 'An unexpected error occurred while creating the staff member.';
+      
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.toString().includes('fetch')) {
+        errorMessage = 'Network error: Unable to connect to the server. Please check your connection and try again.';
+      }
+      
       toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        title: "Unexpected Error",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
