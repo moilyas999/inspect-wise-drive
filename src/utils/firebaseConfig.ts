@@ -6,7 +6,13 @@ export const firebaseConfig = {
   storageBucket: "your-project.appspot.com", // Replace with your actual storage bucket
   messagingSenderId: "123456789", // Replace with your actual sender ID
   appId: "1:123456789:web:abcdef123456", // Replace with your actual app ID
-  vapidKey: "YOUR_VAPID_KEY" // Replace with your actual VAPID key
+};
+
+// Get VAPID key from environment/config at runtime
+export const getVapidKey = () => {
+  // In production, this should come from your environment variables
+  // For now, you'll need to replace this with your actual VAPID key
+  return "YOUR_VAPID_KEY_HERE"; // Replace with your actual VAPID key
 };
 
 // Instructions to get these values:

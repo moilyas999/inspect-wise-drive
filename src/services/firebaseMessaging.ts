@@ -72,8 +72,16 @@ class FirebaseMessagingService {
       const firebase = (window as any).firebase;
       const messaging = firebase.messaging();
       
+      // Get VAPID key from backend
+      const { data: vapidData } = await supabase.functions.invoke('get-vapid-key');
+      const vapidKey = vapidData?.vapidKey;
+      
+      if (!vapidKey) {
+        throw new Error('VAPID key not available');
+      }
+      
       const token = await messaging.getToken({
-        vapidKey: firebaseConfig.vapidKey
+        vapidKey: vapidKey
       });
 
       if (token) {
