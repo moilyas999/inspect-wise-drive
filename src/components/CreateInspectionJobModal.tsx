@@ -137,7 +137,7 @@ const CreateInspectionJobModal = ({ onJobCreated, children }: CreateInspectionJo
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Plus className="w-5 h-5" />
@@ -148,10 +148,10 @@ const CreateInspectionJobModal = ({ onJobCreated, children }: CreateInspectionJo
           </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="registration">Registration Number *</Label>
+              <Label htmlFor="registration" className="text-sm font-medium">Registration Number *</Label>
               <Input
                 id="registration"
                 placeholder="e.g. AB21 XYZ"
@@ -159,25 +159,26 @@ const CreateInspectionJobModal = ({ onJobCreated, children }: CreateInspectionJo
                 onChange={(e) => setRegistration(e.target.value)}
                 required
                 disabled={loading}
-                className="uppercase"
+                className="uppercase h-12 rounded-xl border-2 focus:border-primary/30"
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="vin">VIN (Optional)</Label>
+              <Label htmlFor="vin" className="text-sm font-medium">VIN (Optional)</Label>
               <Input
                 id="vin"
                 placeholder="Vehicle Identification Number"
                 value={vin}
                 onChange={(e) => setVin(e.target.value)}
                 disabled={loading}
+                className="h-12 rounded-xl border-2 focus:border-primary/30"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="make">Make *</Label>
+              <Label htmlFor="make" className="text-sm font-medium">Make *</Label>
               <Input
                 id="make"
                 placeholder="e.g. BMW, Audi, Ford"
@@ -185,11 +186,12 @@ const CreateInspectionJobModal = ({ onJobCreated, children }: CreateInspectionJo
                 onChange={(e) => setMake(e.target.value)}
                 required
                 disabled={loading}
+                className="h-12 rounded-xl border-2 focus:border-primary/30"
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="model">Model *</Label>
+              <Label htmlFor="model" className="text-sm font-medium">Model *</Label>
               <Input
                 id="model"
                 placeholder="e.g. 320d M Sport, A4 Avant"
@@ -197,19 +199,20 @@ const CreateInspectionJobModal = ({ onJobCreated, children }: CreateInspectionJo
                 onChange={(e) => setModel(e.target.value)}
                 required
                 disabled={loading}
+                className="h-12 rounded-xl border-2 focus:border-primary/30"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Purchase Date</Label>
+              <Label className="text-sm font-medium">Purchase Date</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-full justify-start text-left font-normal",
+                      "w-full justify-start text-left font-normal h-12 rounded-xl border-2 focus:border-primary/30",
                       !purchaseDate && "text-muted-foreground"
                     )}
                     disabled={loading}
@@ -218,26 +221,26 @@ const CreateInspectionJobModal = ({ onJobCreated, children }: CreateInspectionJo
                     {purchaseDate ? format(purchaseDate, "PPP") : "Select date"}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0 rounded-xl bg-popover/95 backdrop-blur-sm border-2" align="start">
                   <Calendar
                     mode="single"
                     selected={purchaseDate}
                     onSelect={(date) => date && setPurchaseDate(date)}
                     initialFocus
-                    className={cn("p-3 pointer-events-auto")}
+                    className="p-3"
                   />
                 </PopoverContent>
               </Popover>
             </div>
 
             <div className="space-y-2">
-              <Label>Inspection Deadline</Label>
+              <Label className="text-sm font-medium">Inspection Deadline</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className={cn(
-                      "w-full justify-start text-left font-normal",
+                      "w-full justify-start text-left font-normal h-12 rounded-xl border-2 focus:border-primary/30",
                       !deadline && "text-muted-foreground"
                     )}
                     disabled={loading}
@@ -246,13 +249,13 @@ const CreateInspectionJobModal = ({ onJobCreated, children }: CreateInspectionJo
                     {deadline ? format(deadline, "PPP") : "Select deadline"}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0 rounded-xl bg-popover/95 backdrop-blur-sm border-2" align="start">
                   <Calendar
                     mode="single"
                     selected={deadline}
                     onSelect={(date) => date && setDeadline(date)}
                     initialFocus
-                    className={cn("p-3 pointer-events-auto")}
+                    className="p-3"
                     disabled={(date) => date < new Date()}
                   />
                 </PopoverContent>
@@ -261,9 +264,9 @@ const CreateInspectionJobModal = ({ onJobCreated, children }: CreateInspectionJo
           </div>
 
           {/* Vehicle Details Section */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="year">Year</Label>
+              <Label htmlFor="year" className="text-sm font-medium">Year</Label>
               <Input
                 id="year"
                 type="number"
@@ -273,11 +276,12 @@ const CreateInspectionJobModal = ({ onJobCreated, children }: CreateInspectionJo
                 disabled={loading}
                 min="1900"
                 max={new Date().getFullYear() + 1}
+                className="h-12 rounded-xl border-2 focus:border-primary/30"
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="mileage">Mileage</Label>
+              <Label htmlFor="mileage" className="text-sm font-medium">Mileage</Label>
               <Input
                 id="mileage"
                 type="number"
@@ -286,29 +290,31 @@ const CreateInspectionJobModal = ({ onJobCreated, children }: CreateInspectionJo
                 onChange={(e) => setMileage(e.target.value)}
                 disabled={loading}
                 min="0"
+                className="h-12 rounded-xl border-2 focus:border-primary/30"
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="color">Color</Label>
+              <Label htmlFor="color" className="text-sm font-medium">Color</Label>
               <Input
                 id="color"
                 placeholder="e.g. Black, White, Blue"
                 value={color}
                 onChange={(e) => setColor(e.target.value)}
                 disabled={loading}
+                className="h-12 rounded-xl border-2 focus:border-primary/30"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="fuelType">Fuel Type</Label>
+              <Label htmlFor="fuelType" className="text-sm font-medium">Fuel Type</Label>
               <Select value={fuelType} onValueChange={setFuelType} disabled={loading}>
-                <SelectTrigger>
+                <SelectTrigger className="h-12 rounded-xl border-2 focus:border-primary/30">
                   <SelectValue placeholder="Select fuel type" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-xl bg-popover/95 backdrop-blur-sm border-2">
                   <SelectItem value="petrol">Petrol</SelectItem>
                   <SelectItem value="diesel">Diesel</SelectItem>
                   <SelectItem value="hybrid">Hybrid</SelectItem>
@@ -319,12 +325,12 @@ const CreateInspectionJobModal = ({ onJobCreated, children }: CreateInspectionJo
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="transmission">Transmission</Label>
+              <Label htmlFor="transmission" className="text-sm font-medium">Transmission</Label>
               <Select value={transmission} onValueChange={setTransmission} disabled={loading}>
-                <SelectTrigger>
+                <SelectTrigger className="h-12 rounded-xl border-2 focus:border-primary/30">
                   <SelectValue placeholder="Select transmission" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-xl bg-popover/95 backdrop-blur-sm border-2">
                   <SelectItem value="manual">Manual</SelectItem>
                   <SelectItem value="automatic">Automatic</SelectItem>
                   <SelectItem value="cvt">CVT</SelectItem>
@@ -335,12 +341,12 @@ const CreateInspectionJobModal = ({ onJobCreated, children }: CreateInspectionJo
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="priority">Priority</Label>
+            <Label htmlFor="priority" className="text-sm font-medium">Priority</Label>
             <Select value={priority} onValueChange={setPriority} disabled={loading}>
-              <SelectTrigger>
+              <SelectTrigger className="h-12 rounded-xl border-2 focus:border-primary/30">
                 <SelectValue placeholder="Select priority" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="rounded-xl bg-popover/95 backdrop-blur-sm border-2">
                 <SelectItem value="low">Low</SelectItem>
                 <SelectItem value="medium">Medium</SelectItem>
                 <SelectItem value="high">High</SelectItem>
@@ -350,7 +356,7 @@ const CreateInspectionJobModal = ({ onJobCreated, children }: CreateInspectionJo
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes">Additional Notes</Label>
+            <Label htmlFor="notes" className="text-sm font-medium">Additional Notes</Label>
             <Textarea
               id="notes"
               placeholder="Any additional information about the vehicle or inspection requirements"
@@ -358,11 +364,12 @@ const CreateInspectionJobModal = ({ onJobCreated, children }: CreateInspectionJo
               onChange={(e) => setNotes(e.target.value)}
               disabled={loading}
               rows={2}
+              className="rounded-xl border-2 focus:border-primary/30"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="sellerAddress">Seller Address (Optional)</Label>
+            <Label htmlFor="sellerAddress" className="text-sm font-medium">Seller Address (Optional)</Label>
             <Textarea
               id="sellerAddress"
               placeholder="Address where the vehicle is located or seller's address"
@@ -370,29 +377,30 @@ const CreateInspectionJobModal = ({ onJobCreated, children }: CreateInspectionJo
               onChange={(e) => setSellerAddress(e.target.value)}
               disabled={loading}
               rows={3}
+              className="rounded-xl border-2 focus:border-primary/30"
             />
           </div>
 
-          <div className="bg-accent/20 p-3 rounded-lg">
+          <div className="bg-accent/20 p-4 rounded-xl">
             <p className="text-sm text-muted-foreground">
               <strong>Note:</strong> This inspection job will be automatically assigned to you and you can start the inspection process immediately.
             </p>
           </div>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex flex-col sm:flex-row gap-3 pt-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
               disabled={loading}
-              className="flex-1"
+              className="flex-1 h-12 rounded-xl"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={loading}
-              className="flex-1 gap-2"
+              className="flex-1 gap-2 h-12 rounded-xl"
             >
               {loading ? (
                 <>

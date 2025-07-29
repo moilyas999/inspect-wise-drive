@@ -143,19 +143,19 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
-      <div className="container mx-auto px-4 py-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+      <div className="px-4 py-6 space-y-6 pb-20">
+        {/* Mobile-optimized header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold text-foreground">Dashboard</h2>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Manage vehicle inspections for {business?.name}
             </p>
           </div>
           
           {inspectors.length > 0 && (
             <CreateInspectionJobModal onJobCreated={fetchJobs}>
-              <Button className="gap-2">
+              <Button className="gap-2 h-12 rounded-xl">
                 <Plus className="w-4 h-4" />
                 New Inspection Job
               </Button>
@@ -163,9 +163,9 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="shadow-card border-0 bg-card/80 backdrop-blur-sm">
+        {/* Mobile-optimized stats cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card className="shadow-card border-0 bg-card/80 backdrop-blur-sm rounded-xl">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Car className="w-4 h-4" />
@@ -175,7 +175,7 @@ const Dashboard = () => {
             </CardHeader>
           </Card>
           
-          <Card className="shadow-card border-0 bg-card/80 backdrop-blur-sm">
+          <Card className="shadow-card border-0 bg-card/80 backdrop-blur-sm rounded-xl">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Clock className="w-4 h-4" />
@@ -187,7 +187,7 @@ const Dashboard = () => {
             </CardHeader>
           </Card>
           
-          <Card className="shadow-card border-0 bg-card/80 backdrop-blur-sm">
+          <Card className="shadow-card border-0 bg-card/80 backdrop-blur-sm rounded-xl">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4" />
@@ -199,7 +199,7 @@ const Dashboard = () => {
             </CardHeader>
           </Card>
           
-          <Card className="shadow-card border-0 bg-card/80 backdrop-blur-sm">
+          <Card className="shadow-card border-0 bg-card/80 backdrop-blur-sm rounded-xl">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Users className="w-4 h-4" />
@@ -210,10 +210,10 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Jobs List */}
-        <Card className="shadow-card border-0 bg-card/80 backdrop-blur-sm">
+        {/* Mobile-optimized jobs list */}
+        <Card className="shadow-card border-0 bg-card/80 backdrop-blur-sm rounded-2xl">
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <Car className="w-5 h-5" />
@@ -227,7 +227,7 @@ const Dashboard = () => {
                 variant="outline"
                 size="sm"
                 onClick={fetchJobs}
-                className="gap-2"
+                className="gap-2 h-10 rounded-xl"
               >
                 <RefreshCw className="w-4 h-4" />
                 Refresh
@@ -241,13 +241,13 @@ const Dashboard = () => {
                 <Car className="w-16 h-16 text-muted-foreground mx-auto" />
                 <div>
                   <h3 className="text-xl font-semibold text-foreground mb-2">No Inspection Jobs Yet</h3>
-                  <p className="text-muted-foreground mb-6">
+                  <p className="text-muted-foreground mb-6 text-sm">
                     Create your first vehicle inspection job to get started with your dealership operations.
                   </p>
                   
                   {inspectors.length > 0 ? (
                     <CreateInspectionJobModal onJobCreated={fetchJobs}>
-                      <Button size="lg" className="gap-2">
+                      <Button size="lg" className="gap-2 h-12 rounded-xl">
                         <Plus className="w-5 h-5" />
                         Create First Inspection Job
                       </Button>
@@ -257,7 +257,7 @@ const Dashboard = () => {
                       <p className="text-sm text-muted-foreground">
                         You need to add staff members before creating inspection jobs.
                       </p>
-                      <Button variant="outline" onClick={() => window.location.href = '/admin'}>
+                      <Button variant="outline" onClick={() => window.location.href = '/admin'} className="h-10 rounded-xl">
                         Add Staff Members First
                       </Button>
                     </div>
@@ -269,55 +269,57 @@ const Dashboard = () => {
                 {jobs.map((job) => (
                   <Card 
                     key={job.id} 
-                    className={`border-l-4 ${getStatusColor(job.status)} transition-all hover:shadow-md`}
+                    className={`border-l-4 ${getStatusColor(job.status)} transition-all hover:shadow-md rounded-2xl rounded-l-lg`}
                   >
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
-                        <div className="space-y-1">
-                          <CardTitle className="text-lg font-semibold">
+                        <div className="space-y-2 flex-1 min-w-0">
+                          <CardTitle className="text-lg font-semibold truncate">
                             {job.make} {job.model}
                           </CardTitle>
-                          <CardDescription className="flex items-center gap-2">
-                            <span className="font-mono text-sm bg-muted px-2 py-1 rounded">
+                          <CardDescription className="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <span className="font-mono text-sm bg-muted px-2 py-1 rounded-lg">
                               {job.reg}
                             </span>
                             {job.vin && (
-                              <span className="text-xs text-muted-foreground">
+                              <span className="text-xs text-muted-foreground truncate">
                                 VIN: {job.vin}
                               </span>
                             )}
                           </CardDescription>
                         </div>
-                        {getStatusBadge(job.status)}
+                        <div className="ml-2">
+                          {getStatusBadge(job.status)}
+                        </div>
                       </div>
                     </CardHeader>
                     
                     <CardContent className="space-y-3">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      <div className="grid grid-cols-1 gap-3 text-sm">
                         {job.seller_address && (
                           <div className="flex items-center gap-2 text-muted-foreground">
-                            <MapPin className="w-4 h-4" />
-                            <span>{job.seller_address}</span>
+                            <MapPin className="w-4 h-4 flex-shrink-0" />
+                            <span className="truncate">{job.seller_address}</span>
                           </div>
                         )}
                         
                         <div className={`flex items-center gap-2 ${getUrgencyColor(job.deadline)}`}>
-                          <Calendar className="w-4 h-4" />
-                          <span>
-                            Deadline: {format(new Date(job.deadline), 'PPp')}
+                          <Calendar className="w-4 h-4 flex-shrink-0" />
+                          <span className="truncate">
+                            Deadline: {format(new Date(job.deadline), 'PP')}
                           </span>
                         </div>
                         
                         {job.assigned_inspector && (
                           <div className="flex items-center gap-2 text-muted-foreground">
-                            <Users className="w-4 h-4" />
-                            <span>Assigned to: {job.assigned_inspector.name}</span>
+                            <Users className="w-4 h-4 flex-shrink-0" />
+                            <span className="truncate">Assigned to: {job.assigned_inspector.name}</span>
                           </div>
                         )}
                         
                         <div className="flex items-center gap-2 text-muted-foreground">
-                          <Clock className="w-4 h-4" />
-                          <span>Created: {format(new Date(job.created_at), 'PPp')}</span>
+                          <Clock className="w-4 h-4 flex-shrink-0" />
+                          <span className="truncate">Created: {format(new Date(job.created_at), 'PP')}</span>
                         </div>
                       </div>
                       
@@ -326,7 +328,7 @@ const Dashboard = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => window.location.href = `/inspection/${job.id}`}
-                          className="gap-2"
+                          className="gap-2 h-10 rounded-xl flex-1"
                         >
                           <PlayCircle className="w-4 h-4" />
                           View Details

@@ -153,7 +153,7 @@ const StaffManagementModal = ({ onStaffCreated, children }: StaffManagementModal
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md rounded-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserPlus className="w-5 h-5" />
@@ -164,9 +164,9 @@ const StaffManagementModal = ({ onStaffCreated, children }: StaffManagementModal
           </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">
-            <Label htmlFor="staffName">Full Name</Label>
+            <Label htmlFor="staffName" className="text-sm font-medium">Full Name</Label>
             <Input
               id="staffName"
               type="text"
@@ -175,11 +175,12 @@ const StaffManagementModal = ({ onStaffCreated, children }: StaffManagementModal
               onChange={(e) => setName(e.target.value)}
               required
               disabled={loading}
+              className="h-12 rounded-xl border-2 focus:border-primary/30"
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="staffEmail">Email Address</Label>
+            <Label htmlFor="staffEmail" className="text-sm font-medium">Email Address</Label>
             <Input
               id="staffEmail"
               type="email"
@@ -188,29 +189,30 @@ const StaffManagementModal = ({ onStaffCreated, children }: StaffManagementModal
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={loading}
+              className="h-12 rounded-xl border-2 focus:border-primary/30"
             />
           </div>
 
-          <div className="bg-accent/20 p-3 rounded-lg">
+          <div className="bg-accent/20 p-4 rounded-xl">
             <p className="text-sm text-muted-foreground">
               <strong>Note:</strong> The staff member will receive login credentials that you can share with them directly.
             </p>
           </div>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex flex-col sm:flex-row gap-3 pt-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
               disabled={loading}
-              className="flex-1"
+              className="flex-1 h-12 rounded-xl"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={loading}
-              className="flex-1 gap-2"
+              className="flex-1 gap-2 h-12 rounded-xl"
             >
               {loading ? (
                 <>
