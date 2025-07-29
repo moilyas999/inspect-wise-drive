@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { createSampleJobs, getInspectorId } from '@/lib/sampleData';
+import { createSampleJobs } from '@/lib/sampleData';
 import { 
   Car, 
   Clock, 
@@ -63,28 +63,18 @@ const Dashboard = () => {
   const handleCreateSampleJobs = async () => {
     setCreatingJobs(true);
     try {
-      const inspectorId = await getInspectorId();
-      if (!inspectorId) {
-        toast({
-          title: "Error",
-          description: "Inspector profile not found",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const result = await createSampleJobs(inspectorId);
+      const result = await createSampleJobs();
       if (result.success) {
         toast({
           title: "Sample Jobs Created",
-          description: "3 sample inspection jobs have been added to your dashboard",
+          description: result.message || `${result.jobsCreated} sample inspection jobs have been added`,
         });
         fetchJobs(); // Refresh the jobs list
       } else {
         toast({
-          title: "Error",
-          description: "Failed to create sample jobs",
-          variant: "destructive",
+          title: "Info",
+          description: result.message || "Failed to create sample jobs",
+          variant: result.message?.includes('already exist') ? 'default' : 'destructive',
         });
       }
     } catch (error) {

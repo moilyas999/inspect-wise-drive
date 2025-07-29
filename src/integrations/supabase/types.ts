@@ -237,6 +237,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_sample_inspection_jobs: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          jobs_created: number
+          message: string
+        }[]
+      }
       has_role: {
         Args: {
           _user_id: string
