@@ -9,6 +9,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
 import { useBusinessData, Inspector } from '@/hooks/useBusinessData';
+import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Plus, CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
@@ -17,13 +18,13 @@ import { cn } from '@/lib/utils';
 interface CreateInspectionJobModalProps {
   onJobCreated: () => void;
   children: React.ReactNode;
-  inspectors: Inspector[];
 }
 
-const CreateInspectionJobModal = ({ onJobCreated, children, inspectors }: CreateInspectionJobModalProps) => {
+const CreateInspectionJobModal = ({ onJobCreated, children }: CreateInspectionJobModalProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { businessId } = useBusinessData();
+  const { businessId, getStaffMembers } = useBusinessData();
+  const { user } = useAuth();
   const { toast } = useToast();
 
   // Form state
@@ -40,7 +41,6 @@ const CreateInspectionJobModal = ({ onJobCreated, children, inspectors }: Create
   const [priority, setPriority] = useState('medium');
   const [notes, setNotes] = useState('');
   const [sellerAddress, setSellerAddress] = useState('');
-  const [assignedTo, setAssignedTo] = useState('');
   const [deadline, setDeadline] = useState<Date>(new Date(Date.now() + 24 * 60 * 60 * 1000)); // Tomorrow
 
   const resetForm = () => {
@@ -57,14 +57,13 @@ const CreateInspectionJobModal = ({ onJobCreated, children, inspectors }: Create
     setPriority('medium');
     setNotes('');
     setSellerAddress('');
-    setAssignedTo('');
     setDeadline(new Date(Date.now() + 24 * 60 * 60 * 1000));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!registration.trim() || !make.trim() || !model.trim() || !assignedTo || !businessId) {
+    if (!registration.trim() || !make.trim() || !model.trim() || !businessId || !user) {
       toast({
         title: "Validation Error",
         description: "Please fill in all required fields",
@@ -76,6 +75,16 @@ const CreateInspectionJobModal = ({ onJobCreated, children, inspectors }: Create
     setLoading(true);
 
     try {
+      // Get current user's inspector ID
+      const { data: inspectorData, error: inspectorError } = await supabase
+        .from('inspectors')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (inspectorError || !inspectorData) {
+        throw new Error('Unable to find inspector profile');
+      }
       const { data, error } = await supabase
         .from('inspection_jobs')
         .insert({
@@ -93,7 +102,7 @@ const CreateInspectionJobModal = ({ onJobCreated, children, inspectors }: Create
           priority: priority,
           notes: notes.trim() || null,
           seller_address: sellerAddress.trim() || null,
-          assigned_to: assignedTo,
+          assigned_to: inspectorData.id,
           deadline: deadline.toISOString(),
           status: 'not_started',
           business_id: businessId
@@ -353,22 +362,6 @@ const CreateInspectionJobModal = ({ onJobCreated, children, inspectors }: Create
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="assignedTo">Assign to Inspector *</Label>
-            <Select value={assignedTo} onValueChange={setAssignedTo} disabled={loading}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select an inspector" />
-              </SelectTrigger>
-              <SelectContent>
-                {inspectors.map((inspector) => (
-                  <SelectItem key={inspector.id} value={inspector.id}>
-                    {inspector.name} ({inspector.email})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="sellerAddress">Seller Address (Optional)</Label>
             <Textarea
               id="sellerAddress"
@@ -382,7 +375,7 @@ const CreateInspectionJobModal = ({ onJobCreated, children, inspectors }: Create
 
           <div className="bg-accent/20 p-3 rounded-lg">
             <p className="text-sm text-muted-foreground">
-              <strong>Note:</strong> The assigned inspector will be notified of this new inspection job and can start the inspection process.
+              <strong>Note:</strong> This inspection job will be automatically assigned to you and you can start the inspection process immediately.
             </p>
           </div>
 

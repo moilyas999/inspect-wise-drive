@@ -154,7 +154,7 @@ const Dashboard = () => {
           </div>
           
           {inspectors.length > 0 && (
-            <CreateInspectionJobModal onJobCreated={fetchJobs} inspectors={inspectors}>
+            <CreateInspectionJobModal onJobCreated={fetchJobs}>
               <Button className="gap-2">
                 <Plus className="w-4 h-4" />
                 New Inspection Job
@@ -246,7 +246,7 @@ const Dashboard = () => {
                   </p>
                   
                   {inspectors.length > 0 ? (
-                    <CreateInspectionJobModal onJobCreated={fetchJobs} inspectors={inspectors}>
+                    <CreateInspectionJobModal onJobCreated={fetchJobs}>
                       <Button size="lg" className="gap-2">
                         <Plus className="w-5 h-5" />
                         Create First Inspection Job
