@@ -37,17 +37,31 @@ interface InspectionJob {
   };
 }
 
-interface InspectionStep {
+interface InspectionSection {
   id: string;
-  section: string;
+  section_name: string;
+  section_order: number;
   is_complete: boolean;
   notes: string;
   rating: number;
+  inspector_comments: string;
+  inspection_items: InspectionItem[];
+}
+
+interface InspectionItem {
+  id: string;
+  item_name: string;
+  item_description: string;
+  is_checked: boolean;
+  condition_rating: number;
+  notes: string;
+  photo_url: string;
+  requires_photo: boolean;
 }
 
 interface InspectionFault {
   id: string;
-  type: 'mechanical' | 'bodywork';
+  type: string;
   description: string;
   location: string;
   media_url: string;
@@ -60,7 +74,7 @@ const InspectionReview = () => {
   const { toast } = useToast();
   
   const [job, setJob] = useState<InspectionJob | null>(null);
-  const [steps, setSteps] = useState<InspectionStep[]>([]);
+  const [sections, setSections] = useState<InspectionSection[]>([]);
   const [faults, setFaults] = useState<InspectionFault[]>([]);
   const [loading, setLoading] = useState(true);
   const [reviewNotes, setReviewNotes] = useState('');
@@ -91,15 +105,18 @@ const InspectionReview = () => {
       if (jobError) throw jobError;
       setJob(jobData as InspectionJob);
 
-      // Fetch inspection steps
-      const { data: stepsData, error: stepsError } = await supabase
-        .from('inspection_steps')
-        .select('*')
+      // Fetch inspection sections with items
+      const { data: sectionsData, error: sectionsError } = await supabase
+        .from('inspection_sections')
+        .select(`
+          *,
+          inspection_items (*)
+        `)
         .eq('job_id', jobId)
-        .order('created_at', { ascending: true });
+        .order('section_order', { ascending: true });
 
-      if (stepsError) throw stepsError;
-      setSteps(stepsData as InspectionStep[]);
+      if (sectionsError) throw sectionsError;
+      setSections(sectionsData as InspectionSection[]);
 
       // Fetch faults
       const { data: faultsData, error: faultsError } = await supabase
@@ -277,44 +294,96 @@ const InspectionReview = () => {
           </CardContent>
         </Card>
 
-        {/* Inspection Steps */}
+        {/* Inspection Sections */}
         <Card className="shadow-card border-0 bg-card/80 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle>Inspection Checklist</CardTitle>
+            <CardTitle>Inspection Details</CardTitle>
             <CardDescription>
-              Completed sections: {steps.filter(s => s.is_complete).length} / {steps.length}
+              {sections.length === 0 ? 'No inspection data available yet' : 
+               `Completed sections: ${sections.filter(s => s.is_complete).length} / ${sections.length}`}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {steps.map((step) => (
-                <div
-                  key={step.id}
-                  className={`p-3 rounded-lg border ${
-                    step.is_complete ? 'bg-success/10 border-success/20' : 'bg-muted/50'
-                  }`}
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    {step.is_complete ? (
-                      <CheckCircle2 className="w-4 h-4 text-success" />
-                    ) : (
-                      <XCircle className="w-4 h-4 text-muted-foreground" />
-                    )}
-                    <span className="font-medium capitalize">
-                      {step.section.replace(/_/g, ' ')}
-                    </span>
-                  </div>
-                  {step.notes && (
-                    <p className="text-sm text-muted-foreground">{step.notes}</p>
-                  )}
-                  {step.rating && (
-                    <div className="text-sm text-muted-foreground">
-                      Rating: {step.rating}/5 stars
+            {sections.length === 0 ? (
+              <div className="text-center py-8">
+                <AlertTriangle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-foreground mb-2">No Inspection Data</h3>
+                <p className="text-muted-foreground">
+                  This inspection hasn't been started yet. The inspector needs to begin the inspection process.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {sections.map((section) => (
+                  <div key={section.id} className="border rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-4">
+                      {section.is_complete ? (
+                        <CheckCircle2 className="w-5 h-5 text-success" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-muted-foreground" />
+                      )}
+                      <h3 className="font-semibold">{section.section_name}</h3>
+                      {section.rating && (
+                        <Badge variant="outline">
+                          {section.rating}/5 stars
+                        </Badge>
+                      )}
                     </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                    
+                    {section.inspector_comments && (
+                      <div className="mb-4 p-3 bg-muted/50 rounded">
+                        <p className="text-sm font-medium mb-1">Inspector Comments:</p>
+                        <p className="text-sm text-muted-foreground">{section.inspector_comments}</p>
+                      </div>
+                    )}
+
+                    {section.inspection_items && section.inspection_items.length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-medium text-muted-foreground">Inspection Items:</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {section.inspection_items.map((item) => (
+                            <div
+                              key={item.id}
+                              className={`p-3 rounded border ${
+                                item.is_checked ? 'bg-success/10 border-success/20' : 'bg-muted/30'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 mb-1">
+                                {item.is_checked ? (
+                                  <CheckCircle2 className="w-4 h-4 text-success" />
+                                ) : (
+                                  <XCircle className="w-4 h-4 text-muted-foreground" />
+                                )}
+                                <span className="text-sm font-medium">{item.item_name}</span>
+                              </div>
+                              {item.item_description && (
+                                <p className="text-xs text-muted-foreground mb-2">{item.item_description}</p>
+                              )}
+                              {item.condition_rating && (
+                                <p className="text-xs text-muted-foreground">
+                                  Condition: {item.condition_rating}/5
+                                </p>
+                              )}
+                              {item.notes && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Notes: {item.notes}
+                                </p>
+                              )}
+                              {item.photo_url && (
+                                <div className="mt-2 flex items-center gap-1 text-xs text-primary">
+                                  <Camera className="w-3 h-3" />
+                                  Photo attached
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -345,7 +414,7 @@ const InspectionReview = () => {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <Badge variant="outline">
-                            {fault.type === 'mechanical' ? 'Mechanical' : 'Bodywork'}
+                            {fault.type}
                           </Badge>
                           {fault.location && (
                             <span className="text-sm text-muted-foreground">
