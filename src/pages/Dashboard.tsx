@@ -1,22 +1,22 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { createSampleJobs } from '@/lib/sampleData';
+import { useBusinessData, Inspector } from '@/hooks/useBusinessData';
+import { supabase } from '@/integrations/supabase/client';
+import CreateInspectionJobModal from '@/components/CreateInspectionJobModal';
 import { 
-  Car, 
+  Car,
   Clock, 
   MapPin, 
   PlayCircle, 
-  LogOut, 
   CheckCircle2, 
   AlertCircle,
   RefreshCw,
-  Plus
+  Plus,
+  Calendar,
+  Users
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -25,34 +25,68 @@ interface InspectionJob {
   reg: string;
   make: string;
   model: string;
-  vin: string;
-  seller_address: string;
+  vin: string | null;
+  seller_address: string | null;
   deadline: string;
-  status: 'not_started' | 'in_progress' | 'submitted';
+  status: string;
   created_at: string;
+  business_id: string;
+  assigned_to: string;
+  review_status: string | null;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+  updated_at: string;
+  vehicle_id: string | null;
+  assigned_inspector?: {
+    name: string;
+    email: string;
+  } | null;
 }
 
 const Dashboard = () => {
   const [jobs, setJobs] = useState<InspectionJob[]>([]);
   const [loading, setLoading] = useState(true);
-  const [creatingJobs, setCreatingJobs] = useState(false);
-  const { user, signOut } = useAuth();
+  const [inspectors, setInspectors] = useState<Inspector[]>([]);
+  const { businessId, business, getStaffMembers } = useBusinessData();
   const { toast } = useToast();
-  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (businessId) {
+      fetchJobs();
+      fetchInspectors();
+    }
+  }, [businessId]);
+
+  const fetchInspectors = async () => {
+    try {
+      const staffMembers = await getStaffMembers();
+      setInspectors(staffMembers);
+    } catch (error) {
+      console.error('Error fetching inspectors:', error);
+    }
+  };
 
   const fetchJobs = async () => {
+    if (!businessId) return;
+    
     try {
+      setLoading(true);
       const { data, error } = await supabase
         .from('inspection_jobs')
-        .select('*')
-        .order('deadline', { ascending: true });
+        .select(`
+          *,
+          assigned_inspector:inspectors!inspection_jobs_assigned_to_fkey(name, email)
+        `)
+        .eq('business_id', businessId)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setJobs((data as InspectionJob[]) || []);
+      setJobs((data as any) || []);
     } catch (error) {
+      console.error('Error fetching jobs:', error);
       toast({
-        title: "Error",
-        description: "Failed to load inspection jobs",
+        title: "Error Loading Jobs",
+        description: "Failed to load inspection jobs. Please refresh the page.",
         variant: "destructive",
       });
     } finally {
@@ -60,40 +94,17 @@ const Dashboard = () => {
     }
   };
 
-  const handleCreateSampleJobs = async () => {
-    setCreatingJobs(true);
-    try {
-      const result = await createSampleJobs();
-      if (result.success) {
-        toast({
-          title: "Sample Jobs Created",
-          description: result.message || `${result.jobsCreated} sample inspection jobs have been added`,
-        });
-        fetchJobs(); // Refresh the jobs list
-      } else {
-        toast({
-          title: "Info",
-          description: result.message || "Failed to create sample jobs",
-          variant: result.message?.includes('already exist') ? 'default' : 'destructive',
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive",
-      });
-    } finally {
-      setCreatingJobs(false);
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'not_started':
+        return 'border-l-destructive';
+      case 'in_progress':
+        return 'border-l-warning';
+      case 'submitted':
+        return 'border-l-success';
+      default:
+        return 'border-l-muted';
     }
-  };
-
-  useEffect(() => {
-    fetchJobs();
-  }, []);
-
-  const startInspection = (jobId: string) => {
-    navigate(`/inspection/${jobId}`);
   };
 
   const getStatusBadge = (status: string) => {
@@ -103,7 +114,7 @@ const Dashboard = () => {
       case 'in_progress':
         return <Badge variant="outline" className="gap-1 border-warning text-warning"><Clock className="w-3 h-3" />In Progress</Badge>;
       case 'submitted':
-        return <Badge variant="default" className="gap-1 bg-success hover:bg-success/80"><CheckCircle2 className="w-3 h-3" />Submitted</Badge>;
+        return <Badge variant="default" className="gap-1 bg-success hover:bg-success/80"><CheckCircle2 className="w-3 h-3" />Completed</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
@@ -114,9 +125,9 @@ const Dashboard = () => {
     const deadlineDate = new Date(deadline);
     const hoursUntilDeadline = (deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60);
     
-    if (hoursUntilDeadline < 24) return 'border-l-destructive';
-    if (hoursUntilDeadline < 48) return 'border-l-warning';
-    return 'border-l-primary';
+    if (hoursUntilDeadline < 24) return 'text-destructive';
+    if (hoursUntilDeadline < 48) return 'text-warning';
+    return 'text-muted-foreground';
   };
 
   if (loading) {
@@ -124,7 +135,7 @@ const Dashboard = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <RefreshCw className="w-8 h-8 animate-spin text-primary mx-auto" />
-          <p className="text-muted-foreground">Loading your inspection jobs...</p>
+          <p className="text-muted-foreground">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -132,83 +143,88 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5">
-      {/* Header */}
-      <div className="border-b bg-card/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center">
-                <Car className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-foreground">Inspector Dashboard</h1>
-                <p className="text-sm text-muted-foreground">Welcome back, {user?.user_metadata?.name || 'Inspector'}</p>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={signOut}
-              className="gap-2"
-            >
-              <LogOut className="w-4 h-4" />
-              Sign Out
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
       <div className="container mx-auto px-4 py-6 space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">Dashboard</h2>
+            <p className="text-muted-foreground">
+              Manage vehicle inspections for {business?.name}
+            </p>
+          </div>
+          
+          {inspectors.length > 0 && (
+            <CreateInspectionJobModal onJobCreated={fetchJobs} inspectors={inspectors}>
+              <Button className="gap-2">
+                <Plus className="w-4 h-4" />
+                New Inspection Job
+              </Button>
+            </CreateInspectionJobModal>
+          )}
+        </div>
+
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card className="shadow-card border-0 bg-card/80 backdrop-blur-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Jobs</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Car className="w-4 h-4" />
+                Total Jobs
+              </CardTitle>
               <div className="text-2xl font-bold text-primary">{jobs.length}</div>
             </CardHeader>
           </Card>
+          
           <Card className="shadow-card border-0 bg-card/80 backdrop-blur-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">In Progress</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                In Progress
+              </CardTitle>
               <div className="text-2xl font-bold text-warning">
                 {jobs.filter(job => job.status === 'in_progress').length}
               </div>
             </CardHeader>
           </Card>
+          
           <Card className="shadow-card border-0 bg-card/80 backdrop-blur-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Completed</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4" />
+                Completed
+              </CardTitle>
               <div className="text-2xl font-bold text-success">
                 {jobs.filter(job => job.status === 'submitted').length}
               </div>
             </CardHeader>
           </Card>
+          
+          <Card className="shadow-card border-0 bg-card/80 backdrop-blur-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                Inspectors
+              </CardTitle>
+              <div className="text-2xl font-bold text-primary">{inspectors.length}</div>
+            </CardHeader>
+          </Card>
         </div>
 
         {/* Jobs List */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-foreground">Inspection Jobs</h2>
-            <div className="flex gap-2">
-              {jobs.length === 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCreateSampleJobs}
-                  disabled={creatingJobs}
-                  className="gap-2"
-                >
-                  {creatingJobs ? (
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Plus className="w-4 h-4" />
-                  )}
-                  Add Sample Jobs
-                </Button>
-              )}
+        <Card className="shadow-card border-0 bg-card/80 backdrop-blur-sm">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Car className="w-5 h-5" />
+                  Vehicle Inspection Jobs
+                </CardTitle>
+                <CardDescription>
+                  Manage all vehicle purchase inspections
+                </CardDescription>
+              </div>
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={fetchJobs}
                 className="gap-2"
@@ -217,95 +233,112 @@ const Dashboard = () => {
                 Refresh
               </Button>
             </div>
-          </div>
-
-          {jobs.length === 0 ? (
-            <Card className="shadow-card border-0 bg-card/80 backdrop-blur-sm">
-              <CardContent className="py-12 text-center space-y-4">
-                <Car className="w-12 h-12 text-muted-foreground mx-auto" />
+          </CardHeader>
+          
+          <CardContent>
+            {jobs.length === 0 ? (
+              <div className="text-center space-y-4 py-12">
+                <Car className="w-16 h-16 text-muted-foreground mx-auto" />
                 <div>
-                  <h3 className="text-lg font-semibold text-foreground mb-2">No Jobs Available</h3>
-                  <p className="text-muted-foreground mb-4">
-                    No inspection assignments found. You can add some sample jobs to get started.
+                  <h3 className="text-xl font-semibold text-foreground mb-2">No Inspection Jobs Yet</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Create your first vehicle inspection job to get started with your dealership operations.
                   </p>
-                  <Button
-                    onClick={handleCreateSampleJobs}
-                    disabled={creatingJobs}
-                    variant="mobile"
-                    className="gap-2"
-                  >
-                    {creatingJobs ? (
-                      <>
-                        <RefreshCw className="w-5 h-5 animate-spin" />
-                        Creating Jobs...
-                      </>
-                    ) : (
-                      <>
+                  
+                  {inspectors.length > 0 ? (
+                    <CreateInspectionJobModal onJobCreated={fetchJobs} inspectors={inspectors}>
+                      <Button size="lg" className="gap-2">
                         <Plus className="w-5 h-5" />
-                        Add Sample Inspection Jobs
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-3">
-              {jobs.map((job) => (
-                <Card 
-                  key={job.id} 
-                  className={`shadow-card border-0 bg-card/80 backdrop-blur-sm border-l-4 ${getUrgencyColor(job.deadline)} transition-all hover:shadow-lg hover:scale-[1.01]`}
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-1">
-                        <CardTitle className="text-lg font-semibold">
-                          {job.make} {job.model}
-                        </CardTitle>
-                        <CardDescription className="flex items-center gap-2">
-                          <span className="font-mono text-sm bg-muted px-2 py-1 rounded">
-                            {job.reg}
-                          </span>
-                          {job.vin && (
-                            <span className="text-xs text-muted-foreground">
-                              VIN: {job.vin}
-                            </span>
-                          )}
-                        </CardDescription>
-                      </div>
-                      {getStatusBadge(job.status)}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <MapPin className="w-4 h-4" />
-                        <span>{job.seller_address}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Clock className="w-4 h-4" />
-                        <span>
-                          Deadline: {format(new Date(job.deadline), 'PPp')}
-                        </span>
-                      </div>
-                    </div>
-
-                    {job.status !== 'submitted' && (
-                      <Button
-                        onClick={() => startInspection(job.id)}
-                        variant="mobile"
-                        className="w-full"
-                      >
-                        <PlayCircle className="w-5 h-5" />
-                        {job.status === 'not_started' ? 'Start Inspection' : 'Continue Inspection'}
+                        Create First Inspection Job
                       </Button>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
+                    </CreateInspectionJobModal>
+                  ) : (
+                    <div className="space-y-3">
+                      <p className="text-sm text-muted-foreground">
+                        You need to add staff members before creating inspection jobs.
+                      </p>
+                      <Button variant="outline" onClick={() => window.location.href = '/admin'}>
+                        Add Staff Members First
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {jobs.map((job) => (
+                  <Card 
+                    key={job.id} 
+                    className={`border-l-4 ${getStatusColor(job.status)} transition-all hover:shadow-md`}
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-1">
+                          <CardTitle className="text-lg font-semibold">
+                            {job.make} {job.model}
+                          </CardTitle>
+                          <CardDescription className="flex items-center gap-2">
+                            <span className="font-mono text-sm bg-muted px-2 py-1 rounded">
+                              {job.reg}
+                            </span>
+                            {job.vin && (
+                              <span className="text-xs text-muted-foreground">
+                                VIN: {job.vin}
+                              </span>
+                            )}
+                          </CardDescription>
+                        </div>
+                        {getStatusBadge(job.status)}
+                      </div>
+                    </CardHeader>
+                    
+                    <CardContent className="space-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        {job.seller_address && (
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <MapPin className="w-4 h-4" />
+                            <span>{job.seller_address}</span>
+                          </div>
+                        )}
+                        
+                        <div className={`flex items-center gap-2 ${getUrgencyColor(job.deadline)}`}>
+                          <Calendar className="w-4 h-4" />
+                          <span>
+                            Deadline: {format(new Date(job.deadline), 'PPp')}
+                          </span>
+                        </div>
+                        
+                        {job.assigned_inspector && (
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Users className="w-4 h-4" />
+                            <span>Assigned to: {job.assigned_inspector.name}</span>
+                          </div>
+                        )}
+                        
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Clock className="w-4 h-4" />
+                          <span>Created: {format(new Date(job.created_at), 'PPp')}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-2 pt-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.location.href = `/inspection/${job.id}`}
+                          className="gap-2"
+                        >
+                          <PlayCircle className="w-4 h-4" />
+                          View Details
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
