@@ -96,60 +96,150 @@ export type Database = {
           },
         ]
       }
+      inspection_items: {
+        Row: {
+          business_id: string | null
+          condition_rating: number | null
+          created_at: string
+          id: string
+          is_checked: boolean
+          item_description: string | null
+          item_name: string
+          job_id: string
+          notes: string | null
+          photo_url: string | null
+          requires_photo: boolean | null
+          section_id: string
+          updated_at: string
+        }
+        Insert: {
+          business_id?: string | null
+          condition_rating?: number | null
+          created_at?: string
+          id?: string
+          is_checked?: boolean
+          item_description?: string | null
+          item_name: string
+          job_id: string
+          notes?: string | null
+          photo_url?: string | null
+          requires_photo?: boolean | null
+          section_id: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string | null
+          condition_rating?: number | null
+          created_at?: string
+          id?: string
+          is_checked?: boolean
+          item_description?: string | null
+          item_name?: string
+          job_id?: string
+          notes?: string | null
+          photo_url?: string | null
+          requires_photo?: boolean | null
+          section_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspection_items_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inspection_items_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inspection_jobs: {
         Row: {
           assigned_to: string
           business_id: string | null
+          color: string | null
           created_at: string
           deadline: string | null
+          fuel_type: string | null
           id: string
           make: string
+          mileage: number | null
           model: string
+          notes: string | null
+          priority: string | null
+          purchase_date: string | null
+          purchase_price: number | null
           reg: string
           review_status: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           seller_address: string | null
           status: string
+          transmission: string | null
           updated_at: string
           vehicle_id: string | null
           vin: string | null
+          year: number | null
         }
         Insert: {
           assigned_to: string
           business_id?: string | null
+          color?: string | null
           created_at?: string
           deadline?: string | null
+          fuel_type?: string | null
           id?: string
           make: string
+          mileage?: number | null
           model: string
+          notes?: string | null
+          priority?: string | null
+          purchase_date?: string | null
+          purchase_price?: number | null
           reg: string
           review_status?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           seller_address?: string | null
           status?: string
+          transmission?: string | null
           updated_at?: string
           vehicle_id?: string | null
           vin?: string | null
+          year?: number | null
         }
         Update: {
           assigned_to?: string
           business_id?: string | null
+          color?: string | null
           created_at?: string
           deadline?: string | null
+          fuel_type?: string | null
           id?: string
           make?: string
+          mileage?: number | null
           model?: string
+          notes?: string | null
+          priority?: string | null
+          purchase_date?: string | null
+          purchase_price?: number | null
           reg?: string
           review_status?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           seller_address?: string | null
           status?: string
+          transmission?: string | null
           updated_at?: string
           vehicle_id?: string | null
           vin?: string | null
+          year?: number | null
         }
         Relationships: [
           {
@@ -185,9 +275,12 @@ export type Database = {
       inspection_media: {
         Row: {
           business_id: string | null
+          caption: string | null
           duration: number | null
           file_size: number | null
           id: string
+          inspection_item_id: string | null
+          is_before_photo: boolean | null
           job_id: string
           lat: number | null
           lng: number | null
@@ -199,9 +292,12 @@ export type Database = {
         }
         Insert: {
           business_id?: string | null
+          caption?: string | null
           duration?: number | null
           file_size?: number | null
           id?: string
+          inspection_item_id?: string | null
+          is_before_photo?: boolean | null
           job_id: string
           lat?: number | null
           lng?: number | null
@@ -213,9 +309,12 @@ export type Database = {
         }
         Update: {
           business_id?: string | null
+          caption?: string | null
           duration?: number | null
           file_size?: number | null
           id?: string
+          inspection_item_id?: string | null
+          is_before_photo?: boolean | null
           job_id?: string
           lat?: number | null
           lng?: number | null
@@ -234,6 +333,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "inspection_media_inspection_item_id_fkey"
+            columns: ["inspection_item_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_items"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "inspection_media_job_id_fkey"
             columns: ["job_id"]
             isOneToOne: false
@@ -245,6 +351,56 @@ export type Database = {
             columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inspection_sections: {
+        Row: {
+          business_id: string | null
+          created_at: string
+          id: string
+          inspector_comments: string | null
+          is_complete: boolean
+          job_id: string
+          notes: string | null
+          rating: number | null
+          section_name: string
+          section_order: number
+          updated_at: string
+        }
+        Insert: {
+          business_id?: string | null
+          created_at?: string
+          id?: string
+          inspector_comments?: string | null
+          is_complete?: boolean
+          job_id: string
+          notes?: string | null
+          rating?: number | null
+          section_name: string
+          section_order: number
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string | null
+          created_at?: string
+          id?: string
+          inspector_comments?: string | null
+          is_complete?: boolean
+          job_id?: string
+          notes?: string | null
+          rating?: number | null
+          section_name?: string
+          section_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspection_sections_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_jobs"
             referencedColumns: ["id"]
           },
         ]
@@ -492,6 +648,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_inspection_sections: {
+        Args: { p_job_id: string; p_business_id: string }
+        Returns: undefined
+      }
       create_sample_inspection_jobs: {
         Args: Record<PropertyKey, never>
         Returns: {

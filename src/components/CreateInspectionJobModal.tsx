@@ -31,7 +31,15 @@ const CreateInspectionJobModal = ({ onJobCreated, children, inspectors }: Create
   const [make, setMake] = useState('');
   const [model, setModel] = useState('');
   const [vin, setVin] = useState('');
+  const [year, setYear] = useState(new Date().getFullYear());
+  const [mileage, setMileage] = useState('');
+  const [color, setColor] = useState('');
+  const [fuelType, setFuelType] = useState('');
+  const [transmission, setTransmission] = useState('');
   const [purchaseDate, setPurchaseDate] = useState<Date>(new Date());
+  const [purchasePrice, setPurchasePrice] = useState('');
+  const [priority, setPriority] = useState('medium');
+  const [notes, setNotes] = useState('');
   const [sellerAddress, setSellerAddress] = useState('');
   const [assignedTo, setAssignedTo] = useState('');
   const [deadline, setDeadline] = useState<Date>(new Date(Date.now() + 24 * 60 * 60 * 1000)); // Tomorrow
@@ -41,7 +49,15 @@ const CreateInspectionJobModal = ({ onJobCreated, children, inspectors }: Create
     setMake('');
     setModel('');
     setVin('');
+    setYear(new Date().getFullYear());
+    setMileage('');
+    setColor('');
+    setFuelType('');
+    setTransmission('');
     setPurchaseDate(new Date());
+    setPurchasePrice('');
+    setPriority('medium');
+    setNotes('');
     setSellerAddress('');
     setAssignedTo('');
     setDeadline(new Date(Date.now() + 24 * 60 * 60 * 1000));
@@ -69,6 +85,15 @@ const CreateInspectionJobModal = ({ onJobCreated, children, inspectors }: Create
           make: make.trim(),
           model: model.trim(),
           vin: vin.trim() || null,
+          year: year,
+          mileage: mileage ? parseInt(mileage) : null,
+          color: color.trim() || null,
+          fuel_type: fuelType || null,
+          transmission: transmission || null,
+          purchase_date: purchaseDate.toISOString().split('T')[0],
+          purchase_price: purchasePrice ? parseFloat(purchasePrice) : null,
+          priority: priority,
+          notes: notes.trim() || null,
           seller_address: sellerAddress.trim() || null,
           assigned_to: assignedTo,
           deadline: deadline.toISOString(),
@@ -226,6 +251,123 @@ const CreateInspectionJobModal = ({ onJobCreated, children, inspectors }: Create
                 </PopoverContent>
               </Popover>
             </div>
+          </div>
+
+          {/* Vehicle Details Section */}
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="year">Year</Label>
+              <Input
+                id="year"
+                type="number"
+                placeholder="2024"
+                value={year}
+                onChange={(e) => setYear(parseInt(e.target.value) || new Date().getFullYear())}
+                disabled={loading}
+                min="1900"
+                max={new Date().getFullYear() + 1}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="mileage">Mileage</Label>
+              <Input
+                id="mileage"
+                type="number"
+                placeholder="50000"
+                value={mileage}
+                onChange={(e) => setMileage(e.target.value)}
+                disabled={loading}
+                min="0"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="color">Color</Label>
+              <Input
+                id="color"
+                placeholder="e.g. Black, White, Blue"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                disabled={loading}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="fuelType">Fuel Type</Label>
+              <Select value={fuelType} onValueChange={setFuelType} disabled={loading}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select fuel type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="petrol">Petrol</SelectItem>
+                  <SelectItem value="diesel">Diesel</SelectItem>
+                  <SelectItem value="hybrid">Hybrid</SelectItem>
+                  <SelectItem value="electric">Electric</SelectItem>
+                  <SelectItem value="lpg">LPG</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="transmission">Transmission</Label>
+              <Select value={transmission} onValueChange={setTransmission} disabled={loading}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select transmission" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="manual">Manual</SelectItem>
+                  <SelectItem value="automatic">Automatic</SelectItem>
+                  <SelectItem value="cvt">CVT</SelectItem>
+                  <SelectItem value="semi-automatic">Semi-Automatic</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="purchasePrice">Purchase Price (£)</Label>
+              <Input
+                id="purchasePrice"
+                type="number"
+                placeholder="15000"
+                value={purchasePrice}
+                onChange={(e) => setPurchasePrice(e.target.value)}
+                disabled={loading}
+                min="0"
+                step="0.01"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="priority">Priority</Label>
+              <Select value={priority} onValueChange={setPriority} disabled={loading}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="urgent">Urgent</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="notes">Additional Notes</Label>
+            <Textarea
+              id="notes"
+              placeholder="Any additional information about the vehicle or inspection requirements"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              disabled={loading}
+              rows={2}
+            />
           </div>
 
           <div className="space-y-2">
