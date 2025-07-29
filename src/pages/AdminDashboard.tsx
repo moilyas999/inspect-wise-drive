@@ -232,65 +232,200 @@ const AdminDashboard = () => {
           </TabsList>
 
           <TabsContent value="inspections" className="space-y-6">
-            {/* Quick Stats */}
-            <div className="grid grid-cols-3 gap-3">
-              <MobileCard variant="flat" className="text-center p-4">
-                <div className="text-2xl font-bold text-primary">{stats.total}</div>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
+              <MobileCard variant="flat" className="text-center p-3">
+                <div className="text-xl font-bold text-primary">{stats.total}</div>
                 <div className="text-xs text-muted-foreground">Total</div>
               </MobileCard>
-              <MobileCard variant="flat" className="text-center p-4">
-                <div className="text-2xl font-bold text-warning">{stats.inProgress}</div>
+              <MobileCard variant="flat" className="text-center p-3">
+                <div className="text-xl font-bold text-muted-foreground">{stats.notStarted}</div>
+                <div className="text-xs text-muted-foreground">Pending</div>
+              </MobileCard>
+              <MobileCard variant="flat" className="text-center p-3">
+                <div className="text-xl font-bold text-warning">{stats.inProgress}</div>
                 <div className="text-xs text-muted-foreground">Active</div>
               </MobileCard>
-              <MobileCard variant="flat" className="text-center p-4">
-                <div className="text-2xl font-bold text-success">{stats.submitted}</div>
+              <MobileCard variant="flat" className="text-center p-3">
+                <div className="text-xl font-bold text-success">{stats.submitted}</div>
                 <div className="text-xs text-muted-foreground">Done</div>
+              </MobileCard>
+              <MobileCard variant="flat" className="text-center p-3">
+                <div className="text-xl font-bold text-warning">{stats.pendingReview}</div>
+                <div className="text-xs text-muted-foreground">Review</div>
+              </MobileCard>
+              <MobileCard variant="flat" className="text-center p-3">
+                <div className="text-xl font-bold text-success">{stats.approved}</div>
+                <div className="text-xs text-muted-foreground">Approved</div>
               </MobileCard>
             </div>
 
-            {/* Search */}
-            <MobileInput
-              placeholder="Search jobs..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              leftIcon={<Search className="w-4 h-4" />}
-            />
+            {/* Filters */}
+            <MobileCard variant="elevated">
+              <MobileCardHeader>
+                <MobileCardTitle className="flex items-center gap-2 text-base">
+                  <Filter className="w-5 h-5" />
+                  Filters & Search
+                </MobileCardTitle>
+              </MobileCardHeader>
+              <MobileCardContent className="space-y-4">
+                <MobileInput
+                  placeholder="Search by registration, VIN, make..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  leftIcon={<Search className="w-4 h-4" />}
+                />
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium text-muted-foreground">Status</Label>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger className="h-12 rounded-2xl border-2">
+                        <SelectValue placeholder="All Statuses" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-2xl bg-popover/95 backdrop-blur-sm">
+                        <SelectItem value="all">All Statuses</SelectItem>
+                        <SelectItem value="not_started">Not Started</SelectItem>
+                        <SelectItem value="in_progress">In Progress</SelectItem>
+                        <SelectItem value="submitted">Submitted</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-medium text-muted-foreground">Review</Label>
+                    <Select value={reviewFilter} onValueChange={setReviewFilter}>
+                      <SelectTrigger className="h-12 rounded-2xl border-2">
+                        <SelectValue placeholder="All Reviews" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-2xl bg-popover/95 backdrop-blur-sm">
+                        <SelectItem value="all">All Reviews</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="approved">Approved</SelectItem>
+                        <SelectItem value="rejected">Rejected</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={fetchJobs}
+                  className="w-full gap-2 h-12 rounded-2xl"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Refresh
+                </Button>
+              </MobileCardContent>
+            </MobileCard>
 
             {/* Jobs List */}
-            <div className="space-y-3">
-              {filteredJobs.map((job) => (
-                <MobileCard 
-                  key={job.id} 
-                  variant="bordered"
-                  className={`border-l-4 ${getUrgencyColor(job.deadline)}`}
-                >
-                  <div className="p-4 space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-foreground">{job.make} {job.model}</h4>
-                        <p className="text-sm text-muted-foreground">{job.reg}</p>
-                      </div>
-                      {getStatusBadge(job.status)}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-foreground">
+                  Jobs ({filteredJobs.length})
+                </h2>
+              </div>
+
+              {filteredJobs.length === 0 ? (
+                <MobileCard variant="elevated">
+                  <MobileCardContent className="py-12 text-center">
+                    <div className="w-16 h-16 bg-muted/30 rounded-3xl flex items-center justify-center mx-auto mb-4">
+                      <Car className="w-8 h-8 text-muted-foreground" />
                     </div>
-                    
-                    <div className="flex gap-2">
-                      <Button
-                        variant="touch"
-                        size="sm"
-                        onClick={() => navigate(`/review/${job.id}`)}
-                        className="flex-1"
-                      >
-                        <Eye className="w-4 h-4 mr-2" />
-                        Review
-                      </Button>
-                    </div>
-                  </div>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
+                      {jobs.length === 0 ? 'No Jobs Found' : 'No Results'}
+                    </h3>
+                    <p className="text-muted-foreground text-sm max-w-xs mx-auto">
+                      {jobs.length === 0 
+                        ? 'No inspection jobs have been created yet.' 
+                        : 'Try adjusting your search criteria.'
+                      }
+                    </p>
+                  </MobileCardContent>
                 </MobileCard>
-              ))}
+              ) : (
+                <div className="space-y-3">
+                  {filteredJobs.map((job) => (
+                    <MobileCard 
+                      key={job.id} 
+                      variant="bordered"
+                      className={`border-l-4 ${getUrgencyColor(job.deadline)}`}
+                    >
+                      <div className="p-4 space-y-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-foreground text-base truncate">
+                              {job.make} {job.model}
+                            </h4>
+                            <div className="flex flex-col gap-2 mt-1">
+                              <div className="flex items-center gap-2">
+                                <div className="px-3 py-1 bg-muted/50 rounded-full">
+                                  <span className="text-sm font-mono font-medium">{job.reg}</span>
+                                </div>
+                                {getStatusBadge(job.status)}
+                              </div>
+                              {job.status === 'submitted' && (
+                                <div>{getReviewBadge(job.review_status)}</div>
+                              )}
+                              {job.negotiation_status && (
+                                <div>{getNegotiationBadge(job.negotiation_status)}</div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2 text-sm">
+                          {job.assigned_inspector && (
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <Users className="w-4 h-4 shrink-0" />
+                              <span className="truncate">{job.assigned_inspector.name}</span>
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Clock className="w-4 h-4 shrink-0" />
+                            <span className="truncate">
+                              Due: {format(new Date(job.deadline), 'MMM d, h:mm a')}
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <BarChart3 className="w-4 h-4 shrink-0" />
+                            <span className="truncate">
+                              Created: {format(new Date(job.created_at), 'MMM d, yyyy')}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-2 pt-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => navigate(`/inspection-review/${job.id}`)}
+                            className="flex-1 gap-2 h-12 rounded-2xl"
+                          >
+                            <Eye className="w-4 h-4" />
+                            Review
+                          </Button>
+                          {job.status === 'submitted' && job.review_status === 'approved' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => navigate(`/admin/negotiation/${job.id}`)}
+                              className="flex-1 gap-2 h-12 rounded-2xl"
+                            >
+                              <DollarSign className="w-4 h-4" />
+                              Negotiate
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </MobileCard>
+                  ))}
+                </div>
+              )}
             </div>
           </TabsContent>
 
-          <TabsContent value="staff">
+          <TabsContent value="staff" className="space-y-6">
             <StaffManagement />
           </TabsContent>
         </Tabs>
